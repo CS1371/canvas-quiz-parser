@@ -9,19 +9,19 @@ import fetch from "node-fetch";
  * @param {string} quiz - The Quiz ID for a specific quiz on Canvas
  * @param {string} token - The user's Canvas developer token
  */
-export default function fetchFromCanvas(site, course, quiz, token) {
+export default async function fetchFromCanvas(site, course, quiz, token) {
     // Steps:
     // 1. POST to Canvas, and get back a progress (or possibly a file?)
     // 2. While we wait for Canvas to finish the report, get a list of all the students
     // 3. Once we finish that, we'll just have to wait until it's finished
     
     // Step 1: POST to canvas
+    let fileData = 0;
     const reportApi = "https://" + site + "/api/v1/courses/" + course + "/quizzes/" + quiz 
         + "/reports?quiz_report[report_type]=student_analysis&"
         + "include[]=progress&include[]=file";
-    let fileReady = false;
-    let fileData = "";
-    fetch(reportApi, {
+    
+    const csvReporter = fetch(reportApi, {
         method: "POST",
         headers: {
             "Authorization": "Bearer " + token
@@ -51,23 +51,83 @@ export default function fetchFromCanvas(site, course, quiz, token) {
                 "Authorization": "Bearer " + token
             }})
     })
-    .then(resp => res.json())
+    .then(resp => resp.json())
     .then(async resp => {
         // get the file
-        await fetch(resp.file.url, {
+        // if we have two items, get the first one
+        const fileUrl = resp.length > 1 ? resp[0].file.url : resp.file.url;
+        await fetch(fileUrl, {
+            headers: {
+                "Authorization": "Bearer " + token
+            }})
+            .then(resp => resp.text())
+            .then(resp => {
+                fileData = resp;
+            });
+    });
+    // 2. While we wait, we need to get all the students!
+    const students = [];
+    const studentApi = "https://" + site + "/api/v1/courses/" + course + "/users"
+        + "?enrollment_type[]=student&include[]=enrollments&per_page=100";
+
+    let isDone = false;
+    let currentLink = studentApi;
+    do {
+        await fetch(currentLink, {
             headers: {
                 "Authorization": "Bearer " + token
             }})
             .then(resp => {
-                fileData = resp.text();
+                // if we don't even _have_ links, make one up
+                const links = {
+                    current: "",
+                    next: "",
+                    first: "",
+                    last: "",
+                    raw: ""
+                };
+                if (resp.headers.has("link")) {
+                    links.raw = resp.headers.get("link").split(",");
+                    // We don't necessarily have everything...
+                    for (let i = 0; i < links.raw.length; i++) {
+                        // split and engage
+                        let tmp = links.raw[i].split(";");
+                        if (tmp[1].includes("current")) {
+                            links.current = decodeURI(tmp[0].slice(1, -1));
+                        } else if (tmp[1].includes("next")) {
+                            links.next = decodeURI(tmp[0].slice(1, -1));
+                        } else if (tmp[1].includes("first")) {
+                            links.first = decodeURI(tmp[0].slice(1, -1));
+                        } else if (tmp[1].includes("last")) {
+                            links.last = decodeURI(tmp[0].slice(1, -1));
+                        }
+                    }
+                    // each follows the same formula:
+                    // 1. Split via the ";" - we only need the first part!
+                    // 2. slice it to remove the opening and closing <>
+                    // 3. Decode it!
+                    if (links.current == links.last || links.next === "") {
+                        // we are at the last page; finished!
+                        isDone = true;
+                    } else {
+                        currrentLink = links.next;
+                    }
+                } else {
+                    // no link, just die
+                    isDone = true;
+                }
+                return resp;
             })
+            .then(resp => resp.json())
             .then(resp => {
-                fileReady = true;
-            });
-    });
-
-    while (!fileReady) {}
-
+                // We will just push in a loop. While this LOOKS inefficient, this actually isn't that bad.
+                // Plus, it's thread safe now, since we're just editing the initial students array.
+                for (let i = 0; i < resp.length; i++) {
+                    students.push(resp[i]);
+                }
+            }); 
+    } while (!isDone);
+    await csvReporter;
     console.log(fileData);
 
 
