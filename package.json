@@ -4,7 +4,8 @@
   "description": "Parse Canvas Quizzes via the API into portable JSON",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "rimraf lib && mkdir lib && babel src --watch --out-file lib/index.js",
+    "build": "eslint src && rimraf lib && mkdir lib && babel src --out-file lib/index.js"
   },
   "repository": {
     "type": "git",
@@ -24,7 +25,8 @@
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.2.2",
-    "eslint": "^5.13.0"
+    "eslint": "^5.13.0",
+    "rimraf": "^2.6.3"
   },
   "dependencies": {
     "csv-parse": "^4.3.1"
