@@ -1,0 +1,24 @@
+{
+  "name": "canvas-quiz-parser",
+  "version": "0.0.1",
+  "description": "Parse Canvas Quizzes via the API into portable JSON",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CS1371/canvas-quiz-parser.git"
+  },
+  "keywords": [
+    "csv",
+    "json",
+    "canvas"
+  ],
+  "author": "Alexander Rao <alexhrao@gmail.com> (https://alexhrao.github.io)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CS1371/canvas-quiz-parser/issues"
+  },
+  "homepage": "https://github.com/CS1371/canvas-quiz-parser#readme"
+}
