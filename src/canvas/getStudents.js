@@ -1,4 +1,13 @@
 import fetch from "node-fetch";
+/**
+ * getStudents will fetch all available students from the specified course.
+ * This also uses the Canvas API, but only expects the basic information to
+ * be given. Incidentally, this also returns a promise that resolves to the
+ * array of all canvas students.
+ * @param {string} site The Base site (i.e., "institute.instructure.com")
+ * @param {string} course The Course ID
+ * @param {string} token The Canvas API Token
+ */
 export default async function getStudents(site, course, token) {
     const studentApi = "https://" + site + "/api/v1/courses/" + course + "/users"
         + "?enrollment_type[]=student&include[]=enrollments&per_page=100";
