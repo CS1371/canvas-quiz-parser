@@ -4,8 +4,8 @@
   "description": "Parse Canvas Quizzes via the API into portable JSON",
   "main": "index.js",
   "scripts": {
-    "start": "rimraf lib && mkdir lib && babel src --watch --out-file lib/index.js",
-    "build": "eslint src && rimraf lib && mkdir lib && babel src --out-file lib/index.js"
+    "start": "rimraf lib && mkdir lib && babel src --watch --out-dir lib",
+    "build": "eslint src && rimraf lib && mkdir lib && babel src --out-dir lib"
   },
   "repository": {
     "type": "git",
