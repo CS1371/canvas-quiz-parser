@@ -17,9 +17,10 @@ import parse from "csv-parse/lib/sync";
  * The Question resource looks like this:
  * <code><pre>
  * {
- *   questionId: string,
+ *   question: string,
  *   response: string
  * }
+ * When hydrate is called, the question will be converted to a Question object.
  * @param {string} data The CSV output from Canvas, as a string
  */
 export default function parseResponses(data) {
@@ -57,7 +58,7 @@ export default function parseResponses(data) {
             // if j + 1 = '', then no answer; don't add
             if (output[i][j+1] !== "") {
                 sub.responses.push({
-                    questionId: header[j],
+                    question: header[j],
                     response: output[i][j]
                 });
             }
