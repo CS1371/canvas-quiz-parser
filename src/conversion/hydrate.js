@@ -6,10 +6,17 @@
  */
 export default function hydrate(students, questions) {
     // for each response, fill in question
-    for (let s of students) {
-        for (let r of students[s].responses) {
+    for (let s = 0; s < students.length; s++) {
+        for (let r = 0; r < students[s].responses.length; r++) {
             // for each, replace question!
-            
+            // search for question
+            const question = questions.find((val) => val.id === students[s].responses[r].question);
+            if (question !== undefined) {
+                students[s].responses[r].question = question;
+            } else {
+                students[s].responses[r].question = null;
+            }
         }
     }
+    return students;
 }
