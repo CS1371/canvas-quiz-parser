@@ -18,20 +18,23 @@ import fetch from "node-fetch";
  * Note that both prompt and answer will be HTML (unescaped!) strings, 
  * as fetched from canvas.
  * 
- * The answer is assumed to be the "correct" comment (HTML) from Canvas -
+ * The answer is assumed to be the "neutral" comment (HTML) from Canvas -
  * if you would like to splice your own, you will need to provide a 
- * consumer.
+ * consumer that takes in the complete Canvas question response.
+ * 
  * @param {string} site The Base site (i.e., "institute.instructure.com")
  * @param {string} course The Course ID
  * @param {string} quiz The Quiz ID
  * @param {string} token The Canvas API Token
+ * @param {function} [consumer] The function that provides an answer to a question object
  */
-export default async function getQuestions(site, course, quiz, token) {
+export default async function getQuestions(site, course, quiz, token, consumer = (q) => q.neutral_comments_html) {
     // fetch all the questions. The answers MIGHT also be there!
     // If there are answers, it'll be in neutral comments - just place it there
     // for now. If the user wants different answers, let them be the one to fetch
     // it.
-    const api = "https://" + site + "/courses/" + course + "/quizzes/" + quiz + "/questions";
+
+    const api = "https://" + site + "/api/v1/courses/" + course + "/quizzes/" + quiz + "/questions";
     return fetch(api, {
         headers: {
             Authorization: "Bearer " + token
@@ -43,12 +46,12 @@ export default async function getQuestions(site, course, quiz, token) {
             const questions = [];
             resp.forEach(r => {
                 questions.push({
-                    id: r.id,
+                    id: r.id.toString(),
                     type: r.question_type,
                     points: r.points_possible,
                     name: r.question_name,
                     prompt: r.question_text,
-                    answer: r.neutral_comments_html
+                    answer: consumer(r)
                 });
             });
             return questions;
