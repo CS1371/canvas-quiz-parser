@@ -33,7 +33,6 @@ export default async function parseQuiz(site, course, quiz, token) {
     const responses = parseResponses(await csvReporter);
     // 3. Add in extra students (and existing student data)
     const dehydrated = studentFiller(responses, await studentReporter);
-    return await questionReporter;
     // 4. Hydrate with out questions
     return hydrate(dehydrated, await questionReporter);
 }
