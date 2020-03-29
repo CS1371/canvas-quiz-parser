@@ -64,3 +64,6 @@ typings/
 *.swp
 tmp*.json
 *.csv
+*.pdf
+out/*
+.DS_Store

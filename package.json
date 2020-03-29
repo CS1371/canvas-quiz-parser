@@ -34,8 +34,11 @@
   "dependencies": {
     "@types/node": "^13.9.5",
     "@types/node-fetch": "^2.5.5",
+    "@types/puppeteer": "^2.0.1",
+    "@types/rimraf": "^3.0.0",
     "csv-parse": "^4.8.8",
     "node-fetch": "^2.6.0",
+    "puppeteer": "^2.1.1",
     "typescript": "^3.8.3"
   }
 }

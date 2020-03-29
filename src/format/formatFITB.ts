@@ -1,8 +1,8 @@
-import { FITBQuizResponse } from "../types/QuizResponse";
+import { FITBQuizResponse } from "@types";
 import formatBlank from "./formatBlank";
 
 // TODO: UNSAFE
-const formatMultipleFITB = (qr: FITBQuizResponse): string => {
+const formatFITB = (qr: FITBQuizResponse): string => {
     const { question, response } = qr;
     if (response === undefined) {
         return formatBlank(qr);
@@ -16,4 +16,4 @@ const formatMultipleFITB = (qr: FITBQuizResponse): string => {
     return `<div class="question mfitb"><h2>${name}</h2>${prompt}<div class="mfitb-answers">${qa.join('')}</div></div>`;
 }
 
-export default formatMultipleFITB;
+export default formatFITB;

@@ -8,7 +8,7 @@ export default interface Question {
     prompt: string;
 }
 
-export interface MultipleFITB extends Question {
+export interface FITB extends Question {
     type: QuestionType.FITB;
     prompt: string;
     blanks: string[];

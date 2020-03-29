@@ -1,6 +1,5 @@
 import fetch from "node-fetch";
-import CanvasStudent from "../types/CanvasStudent";
-import CanvasConfig from "../types/CanvasConfig";
+import { CanvasStudent, CanvasConfig } from '@types';
 /**
  * getStudents will fetch all available students from the specified course.
  * This also uses the Canvas API, but only expects the basic information to

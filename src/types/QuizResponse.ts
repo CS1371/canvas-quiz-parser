@@ -1,7 +1,7 @@
-import Question, { MultipleFITB, Essay } from "./Question";
+import Question, { FITB, Essay } from "./Question";
 import QuestionType from "./QuestionType";
 
-export interface QuizResponseBase {
+interface QuizResponseBase {
     type: QuestionType;
     question: Question;
 }
@@ -9,7 +9,7 @@ export interface QuizResponseBase {
 export interface FITBQuizResponse extends QuizResponseBase {
     type: QuestionType.FITB;
     response?: string[];
-    question: MultipleFITB;
+    question: FITB;
 }
 
 export interface EssayQuizResponse extends QuizResponseBase {

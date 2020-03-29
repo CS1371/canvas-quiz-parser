@@ -1,9 +1,13 @@
 import parse from "csv-parse/lib/sync";
-import Question, { Essay, MultipleFITB } from "../types/Question";
-import Student from "../types/Student";
-import QuizResponse from "../types/QuizResponse";
-import CanvasStudent from "../types/CanvasStudent";
-import QuestionType from "../types/QuestionType";
+import {
+    Question,
+    Essay,
+    FITB,
+    Student,
+    QuizResponse,
+    CanvasStudent,
+    QuestionType,
+} from '@types';
 
 const parseResponses = (data: string, questionBank: Question[], studs: CanvasStudent[]): Student[] => {
     const output = parse(data, {}) as string[][];
@@ -72,7 +76,7 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
             const answers = sanitized.split(',').map(a => a.replace(/\n/gi, ','));
             return {
                 type: QuestionType.FITB,
-                question: quest as MultipleFITB,
+                question: quest as FITB,
                 response: answers
             }
         } else {
@@ -85,7 +89,7 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
     } else if (quest.type === QuestionType.FITB) {
         return {
             type: QuestionType.FITB,
-            question: quest as MultipleFITB,
+            question: quest as FITB,
             response: undefined,
         };
     } else if (quest.type === QuestionType.ESSAY) {

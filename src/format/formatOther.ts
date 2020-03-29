@@ -1,4 +1,4 @@
-import QuizResponse from "../types/QuizResponse";
+import { QuizResponse } from '@types';
 import formatBlank from "./formatBlank";
 
 const formatOther = (qr: QuizResponse): string => {

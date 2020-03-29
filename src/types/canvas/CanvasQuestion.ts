@@ -1,4 +1,4 @@
-import QuestionType from "./QuestionType";
+import QuestionType from "../QuestionType";
 
 export default interface CanvasQuestion {
     id: number;

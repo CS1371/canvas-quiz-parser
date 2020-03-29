@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import CanvasConfig from "../types/CanvasConfig";
+import { CanvasConfig } from '@types';
 /**
  * getCsv will return a Promise that resolves to the raw CSV textual data.
  * This uses the Canvas LMS API - specifically the Quiz Reports section. For

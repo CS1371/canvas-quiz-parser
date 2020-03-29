@@ -1,5 +1,4 @@
-import { Essay } from "../types/Question";
-import { EssayQuizResponse } from '../types/QuizResponse';
+import { EssayQuizResponse } from '@types';
 import formatBlank from "./formatBlank";
 
 const formatEssay = (qr: EssayQuizResponse): string => {

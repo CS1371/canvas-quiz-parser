@@ -1,9 +1,13 @@
 import fetch from "node-fetch";
-import Question, { MultipleFITB, Essay } from "../types/Question";
-import CanvasSubmission from "../types/CanvasSubmission";
-import CanvasQuestion from "../types/CanvasQuestion";
-import CanvasConfig from "../types/CanvasConfig";
-import QuestionType from "../types/QuestionType";
+import {
+    Question,
+    FITB,
+    Essay,
+    CanvasSubmission,
+    CanvasQuestion,
+    CanvasConfig,
+    QuestionType,
+} from '@types';
 
 /**
  * getQuestions will fetch the complete question JSON from Canvas, via
@@ -75,7 +79,7 @@ interface CanvasSubmissionResult {
     quiz_submissions: CanvasSubmission[];
 }
 
-const convertFITB = (question: CanvasQuestion): MultipleFITB => {
+const convertFITB = (question: CanvasQuestion): FITB => {
     const txt = question.question_text.replace(/\n/gi, '');
     const parts = txt.split('</p><p>');
     //console.log(parts);

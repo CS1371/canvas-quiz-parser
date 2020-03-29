@@ -1,4 +1,3 @@
-import Question from "./Question";
 import QuizResponse from "./QuizResponse";
 
 export default interface Student {
