@@ -7,18 +7,18 @@ import {
     QuizResponse,
     CanvasStudent,
     QuestionType,
-} from '@types';
+} from "@types";
 
 const parseResponses = (data: string, questionBank: Question[], studs: CanvasStudent[]): Student[] => {
     const output = parse(data, {}) as string[][];
     const header = output[0];
-    const idCol = header.lastIndexOf('id');
-    const questionStartCol = Math.max(header.lastIndexOf('submitted'), header.lastIndexOf('attempt')) + 1;
-    const questionStopCol = header.lastIndexOf('n correct');
+    const idCol = header.lastIndexOf("id");
+    const questionStartCol = Math.max(header.lastIndexOf("submitted"), header.lastIndexOf("attempt")) + 1;
+    const questionStopCol = header.lastIndexOf("n correct");
     // convert header questions to literally just be ID
     const questions: Question[] = [];
     for (let j = questionStartCol; j < questionStopCol; j += 2) {
-        const qId = header[j].split(':')[0];
+        const qId = header[j].split(":")[0];
         const quest = questionBank.find(q => q.id === qId);
         if (quest !== undefined) {
             questions.push(quest);
@@ -48,7 +48,7 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
             return sub;
         } else {
             // questions will be in the right order!
-            const resps: QuizResponse[] = questions.map(quest => dispatchResponse('', quest));
+            const resps: QuizResponse[] = questions.map(quest => dispatchResponse("", quest));
             return {
                 id: stud.id.toString(),
                 login: stud.login_id,
@@ -56,11 +56,11 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
                 name: stud.name,
                 gtid: stud.sis_user_id,
                 responses: resps,
-            }
+            };
         }
     });
     return overall;
-}
+};
 
 const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
     if (ans !== "") {
@@ -72,13 +72,13 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
             };
         } else if (quest.type === QuestionType.FITB) {
             // Split blanks. ONLY invalid character is \n. Replace \, with it, then split, then re-engage:
-            const sanitized = ans.replace(/\\,/gi, '\n');
-            const answers = sanitized.split(',').map(a => a.replace(/\n/gi, ','));
+            const sanitized = ans.replace(/\\,/gi, "\n");
+            const answers = sanitized.split(",").map(a => a.replace(/\n/gi, ","));
             return {
                 type: QuestionType.FITB,
                 question: quest as FITB,
                 response: answers
-            }
+            };
         } else {
             return {
                 type: QuestionType.OTHER,
@@ -105,5 +105,5 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
             response: undefined,
         };
     }
-}
+};
 export default parseResponses;

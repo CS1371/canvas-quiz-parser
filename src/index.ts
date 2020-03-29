@@ -1,6 +1,6 @@
-import puppeteer from 'puppeteer';
-import fs from 'fs';
-import rimraf from 'rimraf';
+import puppeteer from "puppeteer";
+import fs from "fs";
+import rimraf from "rimraf";
 import { getStudents, getCsv, getQuestions } from "./canvas";
 import { parseResponses } from "./conversion";
 import formatMultipleFITB from "./format/formatFITB";
@@ -66,18 +66,18 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
                 } else {
                     return formatOther(qr);
                 }
-            })].join('');
+            })].join("");
         })
-        .map(studHtml => {
-            return `<div class="student">${studHtml}</div>`;
-        });
-        const overall: string = `<!DOCTYPE html><html><head><meta charset="utf8"><style>.cover-page { text-align: center; break-after: page; font-family: 'Courier New'; } .cover-page h1 { font-size: 200%; } .cover-page p { font-size: 150%; } .question { break-after: page } .question.essay { min-height: 20in; max-height: 20in; overflow: hidden; } .question.essay img { break-after: page } img {height: 50% !important; width: 50% !important; }</style></head><body><div class="root">${html.join('')}</div></body></html>`;
-        const pgInd = `${i / 10}`.padStart(2, '0');
+            .map(studHtml => {
+                return `<div class="student">${studHtml}</div>`;
+            });
+        const overall = `<!DOCTYPE html><html><head><meta charset="utf8"><style>.cover-page { text-align: center; break-after: page; font-family: 'Courier New'; } .cover-page h1 { font-size: 200%; } .cover-page p { font-size: 150%; } .question { break-after: page } .question.essay { min-height: 20in; max-height: 20in; overflow: hidden; } .question.essay img { break-after: page } img {height: 50% !important; width: 50% !important; }</style></head><body><div class="root">${html.join("")}</div></body></html>`;
+        const pgInd = `${i / 10}`.padStart(2, "0");
         await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
     }
     await browser.close();
 }
 
-parseQuiz(process.argv[2], process.argv[3], process.argv[4], process.argv[5], process.argv[6])
-    //.then(resp => JSON.stringify(resp))
-    //.then(resp => process.stdout.write(resp));
+parseQuiz(process.argv[2], process.argv[3], process.argv[4], process.argv[5], process.argv[6]);
+//.then(resp => JSON.stringify(resp))
+//.then(resp => process.stdout.write(resp));

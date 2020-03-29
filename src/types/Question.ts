@@ -6,7 +6,7 @@ export default interface Question {
     points: number;
     name: string;
     prompt: string;
-}
+};;;;;;;;;;
 
 export interface FITB extends Question {
     type: QuestionType.FITB;

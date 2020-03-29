@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
+    "lint": "npx eslint src/**/*.ts",
     "start": "rimraf lib && mkdir lib && babel src --watch --out-dir lib",
     "build": "eslint src && rimraf lib && mkdir lib && babel src --out-dir lib"
   },
@@ -36,6 +37,8 @@
     "@types/node-fetch": "^2.5.5",
     "@types/puppeteer": "^2.0.1",
     "@types/rimraf": "^3.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.25.0",
+    "@typescript-eslint/parser": "^2.25.0",
     "csv-parse": "^4.8.8",
     "node-fetch": "^2.6.0",
     "puppeteer": "^2.1.1",

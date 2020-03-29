@@ -25,4 +25,4 @@ export default interface CanvasSubmission {
     "excused?": boolean;
     html_url: string;
     result_url: string;
-}
+};;;;;;;;;;

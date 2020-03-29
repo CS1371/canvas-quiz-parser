@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer from "puppeteer";
 
 
 const printPDF = async (html: string, path: string, browser: puppeteer.Browser): Promise<void> => {

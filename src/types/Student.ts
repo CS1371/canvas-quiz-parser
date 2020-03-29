@@ -7,4 +7,4 @@ export default interface Student {
     login: string;
     email: string;
     responses: QuizResponse[];
-};
+};;;;;;;;;;;

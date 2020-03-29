@@ -7,4 +7,4 @@ export default interface CanvasStudent {
     integration_id: string;
     login_id: string;
     email: string;
-}
+};;;;;;;;;;

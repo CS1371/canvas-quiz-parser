@@ -23,4 +23,4 @@ export default interface CanvasQuestion {
     formula_decimal_places: unknown;
     matches: unknown;
     matching_answer_incorrect_matches: unknown;
-}
+};;;;;;;;;;

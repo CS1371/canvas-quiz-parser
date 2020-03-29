@@ -3,4 +3,4 @@ export default interface CanvasConfig {
     course: string;
     quiz: string;
     token: string;
-}
+};;;;;;;;;;

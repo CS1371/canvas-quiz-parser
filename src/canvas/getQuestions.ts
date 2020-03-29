@@ -7,7 +7,7 @@ import {
     CanvasQuestion,
     CanvasConfig,
     QuestionType,
-} from '@types';
+} from "@types";
 
 /**
  * getQuestions will fetch the complete question JSON from Canvas, via
@@ -51,28 +51,28 @@ export default async function getQuestions(config: CanvasConfig): Promise<Questi
             Authorization: `Bearer ${config.token}`,
         }
     })
-    .then(resp => resp.json() as Promise<CanvasSubmissionResult>)
-    .then(res => res.quiz_submissions)
-    .then(subs => {
+        .then(resp => resp.json() as Promise<CanvasSubmissionResult>)
+        .then(res => res.quiz_submissions)
+        .then(subs => {
         // We need submission IDs
-        return subs.map(sub => {
-            return {
-                id: sub.id.toString(),
-                attempt: sub.attempt.toString(),
-            };
-        });
-    })
-    .then(async subs => {
+            return subs.map(sub => {
+                return {
+                    id: sub.id.toString(),
+                    attempt: sub.attempt.toString(),
+                };
+            });
+        })
+        .then(async subs => {
         // We have submission IDs; get the questions aligned with this:
-        return Promise.all(
-            subs.map(sub => submissionQuestions(config, sub.id, sub.attempt))
-        ).then(cq => cq.flat(1));
-    })
-    .then(cQuestions => {
+            return Promise.all(
+                subs.map(sub => submissionQuestions(config, sub.id, sub.attempt))
+            ).then(cq => cq.flat(1));
+        })
+        .then(cQuestions => {
         // filter out so we only have unique
-        return cQuestions.filter((cq, i, a) => a.findIndex(cqCheck => cqCheck.id === cq.id) === i);
-    })
-    .then(convertQuestions);
+            return cQuestions.filter((cq, i, a) => a.findIndex(cqCheck => cqCheck.id === cq.id) === i);
+        })
+        .then(convertQuestions);
 };
 
 interface CanvasSubmissionResult {
@@ -80,8 +80,8 @@ interface CanvasSubmissionResult {
 }
 
 const convertFITB = (question: CanvasQuestion): FITB => {
-    const txt = question.question_text.replace(/\n/gi, '');
-    const parts = txt.split('</p><p>');
+    const txt = question.question_text.replace(/\n/gi, "");
+    const parts = txt.split("</p><p>");
     //console.log(parts);
     parts[parts.length - 1] = 
         parts[parts.length - 1].substring(0, parts[parts.length - 1].length - 4);
@@ -90,7 +90,7 @@ const convertFITB = (question: CanvasQuestion): FITB => {
         // p will look like: Prompt Part: [stuff]
         // we need to extract Prompt Part
         // UNSAFE: We assume naive HTML, with no errant []
-        const stopInd = p.indexOf('<input');
+        const stopInd = p.indexOf("<input");
         return p.slice(0, stopInd);
     });
     return {
@@ -111,7 +111,7 @@ const convertEssay = (question: CanvasQuestion): Essay => {
         name: question.question_name,
         prompt: question.question_text,
     };
-}
+};
 
 const convertOther = (question: CanvasQuestion): Question => {
     return {
@@ -142,5 +142,5 @@ const submissionQuestions = async (config: CanvasConfig, id: string, attempt: st
             Authorization: `Bearer ${config.token}`,
         }
     })
-    .then(resp => resp.json() as Promise<CanvasQuestion[]>);
-}
+        .then(resp => resp.json() as Promise<CanvasQuestion[]>);
+};

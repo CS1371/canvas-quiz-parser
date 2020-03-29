@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { CanvasStudent, CanvasConfig } from '@types';
+import { CanvasStudent, CanvasConfig } from "@types";
 /**
  * getStudents will fetch all available students from the specified course.
  * This also uses the Canvas API, but only expects the basic information to
@@ -37,12 +37,12 @@ async function getPage(config: CanvasConfig, link: string): Promise<CanvasStuden
                 if (link === null) {
                     throw new Error("Undefined link");
                 } else {
-                    links.raw = link.split(',');
+                    links.raw = link.split(",");
                 }
                 // We don't necessarily have everything...
                 for (let i = 0; i < links.raw.length; i++) {
                 // split and engage
-                    let tmp = links.raw[i].split(";");
+                    const tmp = links.raw[i].split(";");
                     if (tmp[1].includes("current")) {
                         links.current = decodeURI(tmp[0].slice(1, -1));
                     } else if (tmp[1].includes("next")) {
