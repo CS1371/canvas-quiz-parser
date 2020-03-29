@@ -99,7 +99,6 @@ export default async function getQuestions(config: CanvasConfig): Promise<Questi
         .then(subs => {
         // We need submission IDs
             return subs.map(sub => {
-                console.log(sub);
                 return {
                     id: sub.id.toString(),
                     attempt: sub.attempt.toString(),
