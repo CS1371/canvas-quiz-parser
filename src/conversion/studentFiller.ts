@@ -1,3 +1,7 @@
+import Student from "../types/Student";
+import StudentResponse from "../types/StudentResponse";
+import QuizResponse from "../types/QuizResponse";
+
 /**
  * studentFiller will fill in student data into the resulting quiz JSON
  * 
@@ -18,21 +22,21 @@
  * @param {Submission} responses The student responses, as specified in parseResponses
  * @param {Student} students The students, as fetched from Canvas
  */
-export default function studentFiller(responses, students) {
+export default function studentFiller(responses: QuizResponse[], students: Student[]) {
     // for each student, see what responses match,
     // and fill in
-    for (let s = 0; s < students.length; s++) {
-        students[s].id = students[s].id.toString();
-        const myResponses = [];
+    const out: StudentResponse[] = students.map(s => {
+        const myResponses: ({ question: string; response: string; })[] = [];
         for (let j = 0; j < responses.length; j++) {
-            if (responses[j].userId === students[s].id) {
+            if (responses[j].userId === s.id.toString()) {
                 myResponses.push(...responses[j].responses);
             }
-        }
-        // convert student
-        students[s].login = students[s].login_id;
-        // if empty, we need to remove them from the array
-        students[s].responses = myResponses;
-    }
-    return students.filter((v) => v.responses.length > 0);
+        };
+        return {
+            login: s.login_id,
+            id: s.id.toString(),
+            responses: myResponses,
+        };
+    });
+    return out.filter((v) => v.responses.length > 0);
 }

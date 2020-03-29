@@ -23,7 +23,7 @@ import parse from "csv-parse/lib/sync";
  * When hydrate is called, the question will be converted to a Question object.
  * @param {string} data The CSV output from Canvas, as a string
  */
-export default function parseResponses(data) {
+export default function parseResponses(data: string) {
     const output = parse(data, {});
     const submissions = [];
     // first row is headers! Get question info from that
@@ -49,21 +49,21 @@ export default function parseResponses(data) {
     }
     for (let i = 1; i < output.length; i++) {
         // create submissions
-        const sub = {
-            userId: output[i][idCol],
-            responses: []
-        };
+        const responses: { question: string; response: string; }[] = [];
         for (let j = questionStartCol; j < questionStopCol; j+= 2) {
             // j = Answer, j+1 = Points (?)
             // if j + 1 = '', then no answer; don't add
             if (output[i][j+1] !== "") {
-                sub.responses.push({
+                responses.push({
                     question: header[j],
                     response: output[i][j]
                 });
             }
         }
-        submissions.push(sub);
+        submissions.push({
+            userId: output[i][idCol],
+            responses
+        });
     }
     return submissions;
 }

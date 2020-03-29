@@ -4,6 +4,7 @@
   "description": "Parse Canvas Quizzes via the API into portable JSON",
   "main": "index.js",
   "scripts": {
+    "tsc": "tsc",
     "start": "rimraf lib && mkdir lib && babel src --watch --out-dir lib",
     "build": "eslint src && rimraf lib && mkdir lib && babel src --out-dir lib"
   },
@@ -23,15 +24,18 @@
   },
   "homepage": "https://github.com/CS1371/canvas-quiz-parser#readme",
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
-    "@babel/preset-env": "^7.3.1",
-    "eslint": "^5.13.0",
-    "jsdoc": "^3.5.5",
-    "rimraf": "^2.6.3"
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.0",
+    "eslint": "^5.16.0",
+    "jsdoc": "^3.6.3",
+    "rimraf": "^2.7.1"
   },
   "dependencies": {
-    "csv-parse": "^4.3.1",
-    "node-fetch": "^2.3.0"
+    "@types/node": "^13.9.5",
+    "@types/node-fetch": "^2.5.5",
+    "csv-parse": "^4.8.8",
+    "node-fetch": "^2.6.0",
+    "typescript": "^3.8.3"
   }
 }

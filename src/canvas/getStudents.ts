@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import Student from "../types/Student";
 /**
  * getStudents will fetch all available students from the specified course.
  * This also uses the Canvas API, but only expects the basic information to
@@ -8,12 +9,13 @@ import fetch from "node-fetch";
  * @param {string} course The Course ID
  * @param {string} token The Canvas API Token
  */
-export default async function getStudents(site, course, token) {
+export default async function getStudents(site: string, course: string, token: string): Promise<Student[]> {
     const studentApi = "https://" + site + "/api/v1/courses/" + course + "/users"
         + "?enrollment_type[]=student&include[]=enrollments&per_page=100";
     return getPage(site, course, studentApi, token);
 }
-async function getPage(site, course, link, token) {
+
+async function getPage(site: string, course: string, link: string, token: string): Promise<Student[]> {
     return fetch(link, {
         headers: {
             Authorization: "Bearer " + token
@@ -30,9 +32,14 @@ async function getPage(site, course, link, token) {
                     next: "",
                     first: "",
                     last: "",
-                    raw: ""
+                    raw: [""]
                 };
-                links.raw = resp.headers.get("link").split(",");
+                const link = resp.headers.get("link");
+                if (link === null) {
+                    throw new Error("Undefined link");
+                } else {
+                    links.raw = link.split(',');
+                }
                 // We don't necessarily have everything...
                 for (let i = 0; i < links.raw.length; i++) {
                 // split and engage

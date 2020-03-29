@@ -8,7 +8,7 @@ import fetch from "node-fetch";
  * @param {string} quiz The Quiz ID
  * @param {string} token The Canvas API Token to use
  */
-export default async function getCsv(site, course, quiz, token) {
+export default async function getCsv(site: string, course: string, quiz: string, token: string) {
     const reportApi = "https://" + site + "/api/v1/courses/" + course + "/quizzes/" + quiz
         + "/reports?quiz_report[report_type]=student_analysis&"
         + "include[]=progress&include[]=file&quiz_report[includes_all_versions]=true";

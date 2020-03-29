@@ -2,6 +2,12 @@ export { getStudents, getCsv, getQuestions } from "./canvas";
 import { getStudents, getCsv, getQuestions } from "./canvas";
 export { quizJsonify, studentFiller, hydrate } from "./conversion";
 import { parseResponses, studentFiller, hydrate } from "./conversion";
+import formatMultipleFITB from "./conversion/formatMultipleFITB";
+
+function createQuestionHtml(q) {
+    return `<div class="question-listing">${q.prompt}</div>`;
+}
+
 /**
  * parseQuiz will fetch, parse, and fill in quiz results
  * from Canvas, via the Canvas API. In this case, however,
@@ -15,7 +21,7 @@ import { parseResponses, studentFiller, hydrate } from "./conversion";
  * @param {string} quiz The Quiz ID
  * @param {string} token The Canvas API token
  */
-export default async function parseQuiz(site, course, quiz, token) {
+export default async function parseQuiz(site: string, course: string, quiz: string, token: string) {
     /* Steps:
     1. Start up fetching of all the data:
         * Questions
@@ -29,6 +35,15 @@ export default async function parseQuiz(site, course, quiz, token) {
     const csvReporter = getCsv(site, course, quiz, token);
     const studentReporter = getStudents(site, course, token);
     const questionReporter = getQuestions(site, course, quiz, token);
+    const questions = await questionReporter;
+    //console.log(questions);
+    questions.forEach(q => {
+        if (q.type === 'fill_in_multiple_blanks_question') {
+            process.stderr.write(formatMultipleFITB(q, ["hello", "world", "fdsafdsa", "Asdf", "Fdsafdsafdasfdsa"]));
+        }
+    });
+    //process.stderr.write(createQuestionHtml(questions[0]));
+
     // 2. We'll have to wait on csv Reporter, but then convert
     const responses = parseResponses(await csvReporter);
     // 3. Add in extra students (and existing student data)
