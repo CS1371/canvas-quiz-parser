@@ -18,6 +18,7 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
                 response: ans,
             };
         } else if (quest.type === QuestionType.FITB) {
+
             // Split blanks. ONLY invalid character is \n. Replace \, with it, then split, then re-engage:
             const sanitized = ans.replace(/\\,/gi, "\n");
             const answers = sanitized.split(",").map(a => a.replace(/\n/gi, ","));
@@ -81,6 +82,8 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
         const responses: QuizResponse[] = questions.map((quest, q) => {
             const ind = questionStartCol + (q * 2);
             return dispatchResponse(record[ind], quest);
+        }).sort((qr1, qr2) => {
+            return (qr1.question.position - qr2.question.position) || (parseInt(qr1.question.id) - parseInt(qr2.question.id));
         });
         const login = roster.find(s => s.id.toString() === record[idCol]);
         if (login === undefined) {
@@ -94,6 +97,9 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
             gtid: login.sis_user_id,
             responses
         };
+    });
+    questions.sort((q1, q2) => {
+        return (q1.position - q2.position) || (parseInt(q1.id) - parseInt(q2.id));
     });
     return roster.map(stud => {
         const sub = submissions.find(other => other.id === stud.id.toString());

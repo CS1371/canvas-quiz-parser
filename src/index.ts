@@ -9,6 +9,7 @@ import formatEssay from "./format/formatEssay";
 import formatOther from "./format/formatOther";
 import formatCover from "./format/formatCover";
 import printPDF from "./conversion/generatePDF";
+import parse from 'csv-parse/lib/sync';
 
 /**
  * parseQuiz will fetch, parse, and fill in quiz results
@@ -25,6 +26,17 @@ import printPDF from "./conversion/generatePDF";
  * @param outDir The output directory; if it does not exist, it is created. If it already exists, it is deleted.
  */
 export default async function parseQuiz(site: string, course: string, quiz: string, token: string, outDir: string): Promise<void> {
+    /*
+    const evil = String.raw`*\\,:;&$%^#@'<>?,\\\, \\\,\, \\,\, \\\,\\,ℂ◉℗⒴ ℘ⓐṨͲℰ Ⓒℌ◭ℝ◬ℂ⒯℮ℛ ,`;
+    console.log(evil.replace(/\\,/gi, '_'));
+    return;
+    const evil2 = String.raw`Mason Richard Murphy,11896,903262534,sandbox-CS1371,1669,"",2020-03-29 21:18:10 UTC,1,"*\\,:;&$%^#@""'<>?,\\\, \\\,\, \\,\, \\\,\\,ℂ◉℗⒴ ℘ⓐṨͲℰ Ⓒℌ◭ℝ◬ℂ⒯℮ℛ ,"`;
+    const out = parse(evil2);
+    console.log(out);
+    const out1 = out[0][8];
+    console.log(out1);
+    return;
+    */
     /* Steps:
     1. Start up fetching of all the data:
         * Questions
@@ -72,7 +84,7 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
             .map(studHtml => {
                 return `<div class="student">${studHtml}</div>`;
             });
-        const overall = `<!DOCTYPE html><html><head><meta charset="utf8"><style>.cover-page { text-align: center; break-after: page; font-family: 'Courier New'; } .cover-page h1 { font-size: 200%; } .cover-page p { font-size: 150%; } .question { break-after: page } .question.essay { min-height: 20in; max-height: 20in; overflow: hidden; } .question.essay img { break-after: page } img {height: 50% !important; width: 50% !important; }</style></head><body><div class="root">${html.join("")}</div></body></html>`;
+        const overall = `<!DOCTYPE html><html><head><meta charset="utf8"><style>.cover-page { text-decoration: underline; text-align: center; break-after: page; font-family: 'Courier New'; } .cover-page h1 { font-size: 200%; } .cover-page p { font-size: 150%; } .question { break-after: page } .question.essay { min-height: 20in; max-height: 20in; overflow: hidden; } .question.essay img { break-after: page } img {height: 50% !important; width: 50% !important; }</style></head><body><div class="root">${html.join("")}</div></body></html>`;
         const pgInd = `${i / 10}`.padStart(2, "0");
         await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
     }

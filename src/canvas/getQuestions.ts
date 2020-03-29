@@ -31,6 +31,7 @@ const convertFITB = (question: CanvasQuestion): FITB => {
         type: QuestionType.FITB,
         points: question.points_possible,
         name: question.question_name,
+        position: question.position,
         id: question.id.toString(),
         prompt: parts[0],
         blanks
@@ -43,6 +44,7 @@ const convertEssay = (question: CanvasQuestion): Essay => {
         type: QuestionType.ESSAY,
         points: question.points_possible,
         name: question.question_name,
+        position: question.position,
         prompt: question.question_text,
     };
 };
@@ -54,10 +56,12 @@ const convertOther = (question: CanvasQuestion): Question => {
         points: question.points_possible,
         name: question.question_name,
         prompt: question.question_text,
+        position: question.position,
     };
 };
 
 const convertQuestions = (canvasQuestions: CanvasQuestion[]): Question[] => {
+    // reorder canvas questions; first by position, then by ID
     return canvasQuestions.map((q): Question => {
         if (q.question_type === QuestionType.FITB) {
             return convertFITB(q);
@@ -106,13 +110,13 @@ export default async function getQuestions(config: CanvasConfig): Promise<Questi
             });
         })
         .then(async subs => {
-        // We have submission IDs; get the questions aligned with this:
+            // We have submission IDs; get the questions aligned with this:
             return Promise.all(
                 subs.map(sub => submissionQuestions(config, sub.id, sub.attempt))
             ).then(cq => cq.flat(1));
         })
         .then(cQuestions => {
-        // filter out so we only have unique
+            // filter out so we only have unique
             return cQuestions.filter((cq, i, a) => a.findIndex(cqCheck => cqCheck.id === cq.id) === i);
         })
         .then(convertQuestions);
