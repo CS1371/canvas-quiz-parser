@@ -18,10 +18,11 @@ import printPDF from "./conversion/generatePDF";
  * 
  * For a more fine-grained approach, look at the member functions of each
  * sub module.
- * @param {string} site The Base Site (i.e., "institute.instructure.com")
- * @param {string} course The Course ID
- * @param {string} quiz The Quiz ID
- * @param {string} token The Canvas API token
+ * @param site The Base Site (i.e., "institute.instructure.com")
+ * @param course The Course ID
+ * @param quiz The Quiz ID
+ * @param token The Canvas API token
+ * @param outDir The output directory; if it does not exist, it is created. If it already exists, it is deleted.
  */
 export default async function parseQuiz(site: string, course: string, quiz: string, token: string, outDir: string): Promise<void> {
     /* Steps:
@@ -79,5 +80,3 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
 }
 
 parseQuiz(process.argv[2], process.argv[3], process.argv[4], process.argv[5], process.argv[6]);
-//.then(resp => JSON.stringify(resp))
-//.then(resp => process.stdout.write(resp));

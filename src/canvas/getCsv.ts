@@ -4,10 +4,8 @@ import { CanvasConfig } from "@types";
  * getCsv will return a Promise that resolves to the raw CSV textual data.
  * This uses the Canvas LMS API - specifically the Quiz Reports section. For
  * more information, look at the Canvas API Documentation.
- * @param {string} site The base canvas URL (i.e., institute.instructure.com)
- * @param {string} course The Course ID
- * @param {string} quiz The Quiz ID
- * @param {string} token The Canvas API Token to use
+ * @param config The Canvas Configuration
+ * @returns A string, which represents the raw CSV output
  */
 export default async function getCsv(config: CanvasConfig): Promise<string> {
     const reportApi = `https://${config.site}/api/v1/courses/${config.course}/quizzes/${config.quiz}/reports`
@@ -45,7 +43,7 @@ export default async function getCsv(config: CanvasConfig): Promise<string> {
         })
         .then(resp => resp.json() as Promise<{ file: { url: string } }>)
         .then(resp => {
-        // we have the response, get the file!
+            // we have the response, get the file!
             return fetch(resp.file.url, {
                 headers: {
                     Authorization: `Bearer ${config.token}`,

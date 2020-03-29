@@ -1,6 +1,11 @@
 import { QuizResponse, QuestionType } from "@types";
 import formatFITB from "./formatFITB";
 
+/**
+ * Format an unanswered Quiz Response
+ * @param qr The generic Quiz Response
+ * @returns HTML markup suitable for printing to a PDF
+ */
 const formatBlank = (qr: QuizResponse): string => {
     const { question } = qr;
     if (qr.type === QuestionType.FITB) {

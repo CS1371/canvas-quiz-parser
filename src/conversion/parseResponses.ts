@@ -54,7 +54,15 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
     }
 };
 
-const parseResponses = (data: string, questionBank: Question[], studs: CanvasStudent[]): Student[] => {
+/**
+ * Parse quiz responses and generate their JSON equivalent.
+ * @param data The raw CSV data from the CSV report; @see getCsv
+ * @param questionBank The bank of all questions; note that not all of them may be used. Order is not important; @see getQuestions
+ * @param roster The students to interleave into the responses; students who did not submit anything will also be included
+ * @returns An array of complete Student responses.
+ * @throws Unkown Student Encountered, if there is a student in the responses that is not in the roster
+ */
+const parseResponses = (data: string, questionBank: Question[], roster: CanvasStudent[]): Student[] => {
     const output = parse(data, {}) as string[][];
     const header = output[0];
     const idCol = header.lastIndexOf("id");
@@ -74,7 +82,7 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
             const ind = questionStartCol + (q * 2);
             return dispatchResponse(record[ind], quest);
         });
-        const login = studs.find(s => s.id.toString() === record[idCol]);
+        const login = roster.find(s => s.id.toString() === record[idCol]);
         if (login === undefined) {
             throw new Error("Unknown student encountered!");
         }
@@ -87,7 +95,7 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
             responses
         };
     });
-    const overall: Student[] = studs.map(stud => {
+    return roster.map(stud => {
         const sub = submissions.find(other => other.id === stud.id.toString());
         if (sub !== undefined) {
             return sub;
@@ -104,7 +112,6 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
             };
         }
     });
-    return overall;
 };
 
 export default parseResponses;

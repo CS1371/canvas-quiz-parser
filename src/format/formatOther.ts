@@ -1,6 +1,11 @@
 import { QuizResponse } from "@types";
 import formatBlank from "./formatBlank";
 
+/**
+ * Print a generic quiz response
+ * @param qr The generic Quiz Response
+ * @returns HTML suitable to be printed in the PDF
+ */
 const formatOther = (qr: QuizResponse): string => {
     const { question, response } = qr;
     if (qr.response === undefined) {

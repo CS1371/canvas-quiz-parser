@@ -7,8 +7,7 @@ async function getPage(config: CanvasConfig, link: string): Promise<CanvasStuden
             Authorization: `Bearer ${config.token}`,
         }
     }).then(resp => {
-    // check if we have next. If we do, RETURN OURSELVES!
-
+        // check if we have next. If we do, RETURN OURSELVES!
         // if we don't even _have_ links, make one up
         let next = "";
         if (resp.headers.has("link")) {
@@ -71,9 +70,8 @@ async function getPage(config: CanvasConfig, link: string): Promise<CanvasStuden
  * This also uses the Canvas API, but only expects the basic information to
  * be given. Incidentally, this also returns a promise that resolves to the
  * array of all canvas students.
- * @param {string} site The Base site (i.e., "institute.instructure.com")
- * @param {string} course The Course ID
- * @param {string} token The Canvas API Token
+ * @param config The canvas configuration
+ * @returns A Promise that resolves to an array of Canvas Students. @see CanvasStudent for more information.
  */
 export default async function getStudents(config: CanvasConfig): Promise<CanvasStudent[]> {
     const studentApi = `https://${config.site}/api/v1/courses/${config.course}/users?enrollment_type[]=student&include[]=enrollment&per_page=100`;

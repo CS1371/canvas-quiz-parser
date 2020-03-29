@@ -1,6 +1,11 @@
 import { EssayQuizResponse } from "@types";
 import formatBlank from "./formatBlank";
 
+/**
+ * Format an Essay question
+ * @param qr The Essay Question Response
+ * @returns HTML markup for the essay question
+ */
 const formatEssay = (qr: EssayQuizResponse): string => {
     const { question, response } = qr;
     if (response === undefined) {
