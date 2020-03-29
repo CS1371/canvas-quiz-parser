@@ -1,18 +1,18 @@
 import QuestionType from "./QuestionType";
 
-export default interface Question {
+export interface Question {
     type: QuestionType;
     id: string;
     points: number;
     name: string;
     prompt: string;
-};;;;;;;;;;
+};
 
 export interface FITB extends Question {
     type: QuestionType.FITB;
     prompt: string;
     blanks: string[];
-}
+};
 
 export interface Essay extends Question {
     type: QuestionType.ESSAY;

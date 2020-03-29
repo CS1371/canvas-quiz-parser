@@ -23,7 +23,7 @@ import printPDF from "./conversion/generatePDF";
  * @param {string} quiz The Quiz ID
  * @param {string} token The Canvas API token
  */
-export default async function parseQuiz(site: string, course: string, quiz: string, token: string, outDir: string) {
+export default async function parseQuiz(site: string, course: string, quiz: string, token: string, outDir: string): Promise<void> {
     /* Steps:
     1. Start up fetching of all the data:
         * Questions

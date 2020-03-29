@@ -1,4 +1,4 @@
-export default interface CanvasSubmission {
+export interface CanvasSubmission {
     id: number;
     quiz_id: number;
     quiz_version: number;
@@ -25,4 +25,4 @@ export default interface CanvasSubmission {
     "excused?": boolean;
     html_url: string;
     result_url: string;
-};;;;;;;;;;
+};

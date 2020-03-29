@@ -1,4 +1,4 @@
-import Question, { FITB, Essay } from "./Question";
+import { Question, FITB, Essay } from "./Question";
 import QuestionType from "./QuestionType";
 
 interface QuizResponseBase {

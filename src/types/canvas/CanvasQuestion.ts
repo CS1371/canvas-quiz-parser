@@ -1,6 +1,6 @@
 import QuestionType from "../QuestionType";
 
-export default interface CanvasQuestion {
+export interface CanvasQuestion {
     id: number;
     quiz_id: number;
     quiz_group_id: number;
@@ -23,4 +23,4 @@ export default interface CanvasQuestion {
     formula_decimal_places: unknown;
     matches: unknown;
     matching_answer_incorrect_matches: unknown;
-};;;;;;;;;;
+};

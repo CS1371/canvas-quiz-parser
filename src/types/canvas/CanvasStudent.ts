@@ -1,4 +1,4 @@
-export default interface CanvasStudent {
+export interface CanvasStudent {
     id: number;
     name: string;
     sortable_name: string;
@@ -7,4 +7,4 @@ export default interface CanvasStudent {
     integration_id: string;
     login_id: string;
     email: string;
-};;;;;;;;;;
+};

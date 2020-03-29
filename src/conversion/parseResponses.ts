@@ -9,6 +9,51 @@ import {
     QuestionType,
 } from "@types";
 
+const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
+    if (ans !== "") {
+        if (quest.type === QuestionType.ESSAY) {
+            return {
+                type: QuestionType.ESSAY,
+                question: quest as Essay,
+                response: ans,
+            };
+        } else if (quest.type === QuestionType.FITB) {
+            // Split blanks. ONLY invalid character is \n. Replace \, with it, then split, then re-engage:
+            const sanitized = ans.replace(/\\,/gi, "\n");
+            const answers = sanitized.split(",").map(a => a.replace(/\n/gi, ","));
+            return {
+                type: QuestionType.FITB,
+                question: quest as FITB,
+                response: answers
+            };
+        } else {
+            return {
+                type: QuestionType.OTHER,
+                question: quest,
+                response: ans,
+            };
+        }
+    } else if (quest.type === QuestionType.FITB) {
+        return {
+            type: QuestionType.FITB,
+            question: quest as FITB,
+            response: undefined,
+        };
+    } else if (quest.type === QuestionType.ESSAY) {
+        return {
+            type: QuestionType.ESSAY,
+            question: quest as Essay,
+            response: undefined,
+        };
+    } else {
+        return {
+            type: QuestionType.OTHER,
+            question: quest,
+            response: undefined,
+        };
+    }
+};
+
 const parseResponses = (data: string, questionBank: Question[], studs: CanvasStudent[]): Student[] => {
     const output = parse(data, {}) as string[][];
     const header = output[0];
@@ -62,48 +107,4 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
     return overall;
 };
 
-const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
-    if (ans !== "") {
-        if (quest.type === QuestionType.ESSAY) {
-            return {
-                type: QuestionType.ESSAY,
-                question: quest as Essay,
-                response: ans,
-            };
-        } else if (quest.type === QuestionType.FITB) {
-            // Split blanks. ONLY invalid character is \n. Replace \, with it, then split, then re-engage:
-            const sanitized = ans.replace(/\\,/gi, "\n");
-            const answers = sanitized.split(",").map(a => a.replace(/\n/gi, ","));
-            return {
-                type: QuestionType.FITB,
-                question: quest as FITB,
-                response: answers
-            };
-        } else {
-            return {
-                type: QuestionType.OTHER,
-                question: quest,
-                response: ans,
-            };
-        }
-    } else if (quest.type === QuestionType.FITB) {
-        return {
-            type: QuestionType.FITB,
-            question: quest as FITB,
-            response: undefined,
-        };
-    } else if (quest.type === QuestionType.ESSAY) {
-        return {
-            type: QuestionType.ESSAY,
-            question: quest as Essay,
-            response: undefined,
-        };
-    } else {
-        return {
-            type: QuestionType.OTHER,
-            question: quest,
-            response: undefined,
-        };
-    }
-};
 export default parseResponses;
