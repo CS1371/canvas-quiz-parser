@@ -1,5 +1,5 @@
 import parse from "csv-parse/lib/sync";
-import Question from "../types/Question";
+import Question, { Essay, MultipleFITB } from "../types/Question";
 import Student from "../types/Student";
 import QuizResponse from "../types/QuizResponse";
 import CanvasStudent from "../types/CanvasStudent";
@@ -18,50 +18,12 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
         const quest = questionBank.find(q => q.id === qId);
         if (quest !== undefined) {
             questions.push(quest);
-            //throw new Error(`Unknown Question ${qId}`);
         }
     }
     const submissions: Student[] = output.slice(1).map(record => {
         const responses: QuizResponse[] = questions.map((quest, q) => {
             const ind = questionStartCol + (q * 2);
-            if (q === 0) {
-                //console.log(record);
-                //console.log(ind);
-                //console.log(questionStartCol);
-                //console.log(q);
-                //console.log(record[ind]);
-            }
-            let resp: QuizResponse;
-            if (record[ind] !== "") {
-                if (quest.type === QuestionType.ESSAY) {
-                    resp = {
-                        type: QuestionType.ESSAY,
-                        question: quest,
-                        response: record[ind]
-                    };
-                } else if (quest.type === QuestionType.FITB) {
-                    // Split blanks! newline will be our friend here
-                    const answers = record[ind].split(/\n/gi);
-                    resp = {
-                        type: QuestionType.FITB,
-                        question: quest,
-                        response: answers
-                    }
-                } else {
-                    resp = {
-                        type: QuestionType.OTHER,
-                        question: quest,
-                        response: undefined,
-                    };
-                }
-            } else {
-                resp = {
-                    type: quest.type,
-                    question: quest,
-                    response: undefined,
-                };
-            }
-            return resp;
+            return dispatchResponse(record[ind], quest);
         });
         const login = studs.find(s => s.id.toString() === record[idCol]);
         if (login === undefined) {
@@ -71,6 +33,8 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
             id: record[idCol],
             login: login.login_id,
             email: login.email,
+            name: login.name,
+            gtid: login.sis_user_id,
             responses
         };
     });
@@ -80,16 +44,13 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
             return sub;
         } else {
             // questions will be in the right order!
-            const resps: QuizResponse[] = questions.map(q => {
-                return {
-                    type: q.type,
-                    question: q,
-                    response: undefined,
-                };
-            });
+            const resps: QuizResponse[] = questions.map(quest => dispatchResponse('', quest));
             return {
                 id: stud.id.toString(),
                 login: stud.login_id,
+                email: stud.email,
+                name: stud.name,
+                gtid: stud.sis_user_id,
                 responses: resps,
             }
         }
@@ -97,79 +58,48 @@ const parseResponses = (data: string, questionBank: Question[], studs: CanvasStu
     return overall;
 }
 
-export default parseResponses;
-
-/**
- * quizJsonify will turn CSV quiz Data into JSON. The format will be an array,
- * where each element represents a single complete submission.
- * 
- * Each submission will be of the form:
- * <code><pre>
- * {
- *  userId: string,
- *  responses: [Question]
- * }
- * </pre></code>
- * 
- * Unlike other functions in this module, this one does *not* return
- * a Promise! In other words, this function is **synchronous**.
- * 
- * The Question resource looks like this:
- * <code><pre>
- * {
- *   question: string,
- *   response: string
- * }
- * When hydrate is called, the question will be converted to a Question object.
- * @param {string} data The CSV output from Canvas, as a string
- *
-export default function parseResponses2(data: string) {
-    const output = parse(data, {});
-    const submissions = [];
-    // first row is headers! Get question info from that
-    const header = output[0];
-    let idCol = -1;
-    let questionStartCol = -1;
-    let questionStopCol = -1;
-    for (let j = 0; j < header.length; j++) {
-        if (header[j] === "id") {
-            idCol = j;
-        } else if (header[j] === "submitted") {
-            questionStartCol = j + 1;
-        } else if (header[j] === "attempt") {
-            questionStartCol = j + 1;
-        } else if (header[j] === "n correct") {
-            // Don't subtract, so that we can safely iterate from start -> stop - 1 (zero based!)
-            questionStopCol = j;
-        }
-    }
-    // convert header questions to literally just be ID
-    for (let j = questionStartCol; j < questionStopCol; j += 2) {
-        header[j] = header[j].split(":")[0];
-    }
-    for (let i = 1; i < output.length; i++) {
-        // create submissions
-        const responses: { question: string; response: string; }[] = [];
-        for (let j = questionStartCol; j < questionStopCol; j+= 2) {
-            // j = Answer, j+1 = Points (?)
-            // if j + 1 = '', then no answer; don't add
-            if (output[i][j+1] !== "") {
-                responses.push({
-                    question: header[j],
-                    response: output[i][j]
-                });
-            } else {
-                responses.push({
-                    question: header[j],
-                    response: "NOT ANSWERED"
-                })
+const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
+    if (ans !== "") {
+        if (quest.type === QuestionType.ESSAY) {
+            return {
+                type: QuestionType.ESSAY,
+                question: quest as Essay,
+                response: ans,
+            };
+        } else if (quest.type === QuestionType.FITB) {
+            // Split blanks. ONLY invalid character is \n. Replace \, with it, then split, then re-engage:
+            const sanitized = ans.replace(/\\,/gi, '\n');
+            const answers = sanitized.split(',').map(a => a.replace(/\n/gi, ','));
+            return {
+                type: QuestionType.FITB,
+                question: quest as MultipleFITB,
+                response: answers
             }
+        } else {
+            return {
+                type: QuestionType.OTHER,
+                question: quest,
+                response: ans,
+            };
         }
-        submissions.push({
-            userId: output[i][idCol],
-            responses
-        });
+    } else if (quest.type === QuestionType.FITB) {
+        return {
+            type: QuestionType.FITB,
+            question: quest as MultipleFITB,
+            response: undefined,
+        };
+    } else if (quest.type === QuestionType.ESSAY) {
+        return {
+            type: QuestionType.ESSAY,
+            question: quest as Essay,
+            response: undefined,
+        };
+    } else {
+        return {
+            type: QuestionType.OTHER,
+            question: quest,
+            response: undefined,
+        };
     }
-    return submissions;
 }
-*/
+export default parseResponses;

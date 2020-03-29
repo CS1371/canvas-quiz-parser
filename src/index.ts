@@ -1,6 +1,12 @@
 import { getStudents, getCsv, getQuestions } from "./canvas";
 import { parseResponses } from "./conversion";
-import formatMultipleFITB from "./conversion/formatMultipleFITB";
+import formatMultipleFITB from "./format/formatMultipleFITB";
+import CanvasConfig from "./types/CanvasConfig";
+import fs from 'fs';
+import QuestionType from "./types/QuestionType";
+import formatEssay from "./format/formatEssay";
+import formatOther from "./format/formatOther";
+import formatCover from "./format/formatCover";
 
 /**
  * parseQuiz will fetch, parse, and fill in quiz results
@@ -15,7 +21,7 @@ import formatMultipleFITB from "./conversion/formatMultipleFITB";
  * @param {string} quiz The Quiz ID
  * @param {string} token The Canvas API token
  */
-export default async function parseQuiz(site: string, course: string, quiz: string, token: string) {
+export default async function parseQuiz(site: string, course: string, quiz: string, token: string, outDir: string) {
     /* Steps:
     1. Start up fetching of all the data:
         * Questions
@@ -27,23 +33,39 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
     4. Hydrate with questions and corresponding answers
     */
     // 1. Fetching
-    const csvReporter = getCsv(site, course, quiz, token);
-    const studentReporter = getStudents(site, course, token);
-    const questionReporter = getQuestions(site, course, quiz, token);
-    
-    //process.stderr.write(createQuestionHtml(questions[0]));
+    const config: CanvasConfig = { site, course, quiz, token };
+    const csvReporter = getCsv(config);
+    const studentReporter = getStudents(config);
+    const questionReporter = getQuestions(config);
+
     // now that we have questions and students, matchmake!
     // Parse their responses, providing the question library.
     // We're guaranteed that every question will be accounted for.
     // 2. We'll have to wait on csv Reporter, but then convert
     const responses = parseResponses(await csvReporter, await questionReporter, await studentReporter);
-    //console.log(responses);
-    //console.log('=== ANGELA RESPONSE ===');
-    const aho = responses.filter(stud => stud.login === 'aho41')[0];
-    console.log(aho.responses);
-    console.log(aho.responses.length);
+
+    // stream every 10 students
+    for (let i = 0; i < responses.length; i += 10) {
+        const endInd = i + 10 > responses.length - 1 ? responses.length - 1 : 10;
+        const html: string[] = responses.slice(i, endInd).map(resp => {
+            return [formatCover(resp), ...resp.responses.map(qr => {
+                if (qr.type === QuestionType.ESSAY) {
+                    return formatEssay(qr);
+                } else if (qr.type === QuestionType.FITB) {
+                    return formatMultipleFITB(qr);
+                } else {
+                    return formatOther(qr);
+                }
+            })].join('');
+        })
+        .map(studHtml => {
+            return `<div class="student">${studHtml}</div>`;
+        });
+        const overall: string = `<!DOCTYPE html><html><head><meta charset="utf8"><style>.cover-page { text-align: center; break-after: page; font-family: 'Courier New'; } .cover-page h1 { font-size: 200%; } .cover-page p { font-size: 150%; } .question { break-after: page } .question.essay { min-height: 20in; max-height: 20in; overflow: hidden; } .question.essay img { break-after: page } img {height: 50% !important; width: 50% !important; }</style></head><body><div class="root">${html.join('')}</div></body></html>`;
+        fs.writeFile(`${outDir}/${i / 10}.pdf`, overall, () => {});
+    }
 }
 
-parseQuiz(process.argv[2], process.argv[3], process.argv[4], process.argv[5])
+parseQuiz(process.argv[2], process.argv[3], process.argv[4], process.argv[5], process.argv[6])
     //.then(resp => JSON.stringify(resp))
     //.then(resp => process.stdout.write(resp));

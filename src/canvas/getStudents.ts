@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
 import CanvasStudent from "../types/CanvasStudent";
+import CanvasConfig from "../types/CanvasConfig";
 /**
  * getStudents will fetch all available students from the specified course.
  * This also uses the Canvas API, but only expects the basic information to
@@ -9,16 +10,15 @@ import CanvasStudent from "../types/CanvasStudent";
  * @param {string} course The Course ID
  * @param {string} token The Canvas API Token
  */
-export default async function getStudents(site: string, course: string, token: string): Promise<CanvasStudent[]> {
-    const studentApi = "https://" + site + "/api/v1/courses/" + course + "/users"
-        + "?enrollment_type[]=student&include[]=enrollments&per_page=100";
-    return getPage(site, course, studentApi, token);
+export default async function getStudents(config: CanvasConfig): Promise<CanvasStudent[]> {
+    const studentApi = `https://${config.site}/api/v1/courses/${config.course}/users?enrollment_type[]=student&include[]=enrollment&per_page=100`;
+    return getPage(config, studentApi);
 }
 
-async function getPage(site: string, course: string, link: string, token: string): Promise<CanvasStudent[]> {
+async function getPage(config: CanvasConfig, link: string): Promise<CanvasStudent[]> {
     return fetch(link, {
         headers: {
-            Authorization: "Bearer " + token
+            Authorization: `Bearer ${config.token}`,
         }
     })
         .then(resp => {
@@ -69,7 +69,7 @@ async function getPage(site: string, course: string, link: string, token: string
             if (next === "") {
                 return resp.json();
             } else {
-                const pager = getPage(site, course, next, token)
+                const pager = getPage(config, next)
                     .then(async pagerResponse => {
                         // concatenate with our own response!
                         const current = await resp.json();

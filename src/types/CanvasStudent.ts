@@ -1,6 +1,10 @@
 export default interface CanvasStudent {
     id: number;
-    login_id: string;
     name: string;
+    sortable_name: string;
+    short_name: string;
+    sis_user_id: string;
+    integration_id: string;
+    login_id: string;
     email: string;
 }
