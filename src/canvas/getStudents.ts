@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import Student from "../types/Student";
+import CanvasStudent from "../types/CanvasStudent";
 /**
  * getStudents will fetch all available students from the specified course.
  * This also uses the Canvas API, but only expects the basic information to
@@ -9,13 +9,13 @@ import Student from "../types/Student";
  * @param {string} course The Course ID
  * @param {string} token The Canvas API Token
  */
-export default async function getStudents(site: string, course: string, token: string): Promise<Student[]> {
+export default async function getStudents(site: string, course: string, token: string): Promise<CanvasStudent[]> {
     const studentApi = "https://" + site + "/api/v1/courses/" + course + "/users"
         + "?enrollment_type[]=student&include[]=enrollments&per_page=100";
     return getPage(site, course, studentApi, token);
 }
 
-async function getPage(site: string, course: string, link: string, token: string): Promise<Student[]> {
+async function getPage(site: string, course: string, link: string, token: string): Promise<CanvasStudent[]> {
     return fetch(link, {
         headers: {
             Authorization: "Bearer " + token

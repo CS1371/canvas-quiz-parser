@@ -1,5 +1,7 @@
-export interface Question {
-    type: string;
+import QuestionType from "./QuestionType";
+
+export default interface Question {
+    type: QuestionType;
     id: string;
     points: number;
     name: string;
@@ -7,11 +9,11 @@ export interface Question {
 }
 
 export interface MultipleFITB extends Question {
-    type: 'fill_in_multiple_blanks_question';
+    type: QuestionType.FITB;
     prompt: string;
     blanks: string[];
 }
 
 export interface Essay extends Question {
-    type: 'essay_question';
-}
+    type: QuestionType.ESSAY;
+};

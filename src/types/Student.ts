@@ -1,6 +1,8 @@
+import Question from "./Question";
+import QuizResponse from "./QuizResponse";
+
 export default interface Student {
-    id: number;
-    login_id: string;
-    name: string;
-    email: string;
-}
+    id: string;
+    login: string;
+    responses: QuizResponse[];
+};

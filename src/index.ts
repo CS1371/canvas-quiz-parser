@@ -1,12 +1,6 @@
-export { getStudents, getCsv, getQuestions } from "./canvas";
 import { getStudents, getCsv, getQuestions } from "./canvas";
-export { quizJsonify, studentFiller, hydrate } from "./conversion";
-import { parseResponses, studentFiller, hydrate } from "./conversion";
+import { parseResponses } from "./conversion";
 import formatMultipleFITB from "./conversion/formatMultipleFITB";
-
-function createQuestionHtml(q) {
-    return `<div class="question-listing">${q.prompt}</div>`;
-}
 
 /**
  * parseQuiz will fetch, parse, and fill in quiz results
@@ -29,29 +23,27 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
         * Students
     2. Convert the CSV Data
     3. Add in the student data
+    4. For each student, generate an array of questions and their answers
     4. Hydrate with questions and corresponding answers
     */
     // 1. Fetching
     const csvReporter = getCsv(site, course, quiz, token);
     const studentReporter = getStudents(site, course, token);
     const questionReporter = getQuestions(site, course, quiz, token);
-    const questions = await questionReporter;
-    //console.log(questions);
-    questions.forEach(q => {
-        if (q.type === 'fill_in_multiple_blanks_question') {
-            process.stderr.write(formatMultipleFITB(q, ["hello", "world", "fdsafdsa", "Asdf", "Fdsafdsafdasfdsa"]));
-        }
-    });
+    
     //process.stderr.write(createQuestionHtml(questions[0]));
-
+    // now that we have questions and students, matchmake!
+    // Parse their responses, providing the question library.
+    // We're guaranteed that every question will be accounted for.
     // 2. We'll have to wait on csv Reporter, but then convert
-    const responses = parseResponses(await csvReporter);
-    // 3. Add in extra students (and existing student data)
-    const dehydrated = studentFiller(responses, await studentReporter);
-    // 4. Hydrate with out questions
-    return hydrate(dehydrated, await questionReporter);
+    const responses = parseResponses(await csvReporter, await questionReporter, await studentReporter);
+    //console.log(responses);
+    //console.log('=== ANGELA RESPONSE ===');
+    const aho = responses.filter(stud => stud.login === 'aho41')[0];
+    console.log(aho.responses);
+    console.log(aho.responses.length);
 }
 
 parseQuiz(process.argv[2], process.argv[3], process.argv[4], process.argv[5])
-    .then(resp => JSON.stringify(resp))
-    .then(resp => process.stdout.write(resp));
+    //.then(resp => JSON.stringify(resp))
+    //.then(resp => process.stdout.write(resp));
