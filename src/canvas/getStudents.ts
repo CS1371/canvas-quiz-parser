@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { CanvasStudent, CanvasConfig } from "@types";
+import { CanvasStudent, CanvasConfig } from "../types";
 
 async function getPage(config: CanvasConfig, link: string): Promise<CanvasStudent[]> {
     return fetch(link, {

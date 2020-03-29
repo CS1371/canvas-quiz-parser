@@ -1,4 +1,4 @@
-import { FITBQuizResponse } from "@types";
+import { FITBQuizResponse } from "../types";
 import formatBlank from "./formatBlank";
 
 // TODO: UNSAFE

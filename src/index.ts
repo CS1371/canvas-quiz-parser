@@ -4,7 +4,7 @@ import rimraf from "rimraf";
 import { getStudents, getCsv, getQuestions } from "./canvas";
 import { parseResponses } from "./conversion";
 import formatMultipleFITB from "./format/formatFITB";
-import { CanvasConfig, QuestionType } from "@types";
+import { CanvasConfig, QuestionType } from "./types";
 import formatEssay from "./format/formatEssay";
 import formatOther from "./format/formatOther";
 import formatCover from "./format/formatCover";
@@ -57,7 +57,7 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
     fs.mkdirSync(outDir);
     const browser = await launcher;
     for (let i = 0; i < responses.length; i += 10) {
-        const endInd = i + 10 > responses.length - 1 ? responses.length - 1 : 10;
+        const endInd = i + 10 > responses.length ? responses.length : i + 10;
         const html: string[] = responses.slice(i, endInd).map(resp => {
             return [formatCover(resp), ...resp.responses.map(qr => {
                 if (qr.type === QuestionType.ESSAY) {

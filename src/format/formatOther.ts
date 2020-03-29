@@ -1,4 +1,4 @@
-import { QuizResponse } from "@types";
+import { QuizResponse } from "../types";
 import formatBlank from "./formatBlank";
 
 /**

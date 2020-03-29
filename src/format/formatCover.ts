@@ -1,4 +1,4 @@
-import { Student } from "@types";
+import { Student } from "../types";
 
 /**
  * Print a cover page, as HTML

@@ -1,4 +1,4 @@
-import { QuizResponse, QuestionType } from "@types";
+import { QuizResponse, QuestionType } from "../types";
 import formatFITB from "./formatFITB";
 
 /**

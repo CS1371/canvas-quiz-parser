@@ -7,7 +7,7 @@ import {
     QuizResponse,
     CanvasStudent,
     QuestionType,
-} from "@types";
+} from "../types";
 
 const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
     if (ans !== "") {

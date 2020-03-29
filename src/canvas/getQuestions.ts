@@ -7,7 +7,7 @@ import {
     CanvasQuestion,
     CanvasConfig,
     QuestionType,
-} from "@types";
+} from "../types";
 
 interface CanvasSubmissionResult {
     quiz_submissions: CanvasSubmission[];
@@ -99,6 +99,7 @@ export default async function getQuestions(config: CanvasConfig): Promise<Questi
         .then(subs => {
         // We need submission IDs
             return subs.map(sub => {
+                console.log(sub);
                 return {
                     id: sub.id.toString(),
                     attempt: sub.attempt.toString(),
