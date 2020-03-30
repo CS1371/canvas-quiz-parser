@@ -9,7 +9,7 @@ wsl:
 	&& npm install \
 	&& npx tsc \
 	&& chmod +x ./lib/index.js
-	@sudo apt install chromium-browser
+	@sudo apt install chromium-browser -y
 	@echo "Please restart your shell before running ./lib/index.js"
 mac:
 	@brew install node && brew install npm
