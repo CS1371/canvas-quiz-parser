@@ -1,6 +1,6 @@
 {
   "name": "canvas-quiz-parser",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Parse Canvas Quizzes via the API into portable JSON",
   "main": "index.js",
   "scripts": {
