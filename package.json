@@ -6,8 +6,8 @@
   "scripts": {
     "tsc": "tsc",
     "lint": "npx eslint src/**/*.ts",
-    "start": "rimraf lib && mkdir lib && babel src --watch --out-dir lib",
-    "build": "eslint src && rimraf lib && mkdir lib && babel src --out-dir lib"
+    "lint-fix": "npx eslint src/**/*.ts",
+    "build": "npx eslint src/**/*.ts && npx tsc"
   },
   "repository": {
     "type": "git",
