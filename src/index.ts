@@ -92,7 +92,8 @@ export default async function parseQuiz(config: CanvasConfig, outConfig: OutputC
             try {
                 await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
             } catch {
-                // browser failed, and should be closed; remake the browser and attempt again...
+                // browser failed, but we need to formally close it. remake the browser and attempt again...
+                await browser.close();
                 browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
                 await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
             }
