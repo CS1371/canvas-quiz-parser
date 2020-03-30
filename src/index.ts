@@ -51,7 +51,7 @@ export default async function parseQuiz(config: CanvasConfig, outConfig: OutputC
     // 1. Fetching
     // start up browser
     const { outDir, template: includeTemplate } = outConfig;
-    const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true });
+    const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     
     const csvReporter = requestCSV(config);
     const studentReporter = getStudents(config);
@@ -72,7 +72,7 @@ export default async function parseQuiz(config: CanvasConfig, outConfig: OutputC
         fs.mkdirSync(outDir);
     }
     // create template:
-    const browser = await launcher;
+    let browser = await launcher;
     if (includeTemplate) {
         const templateHtml: string = generateHtml([template]);
         if (browser !== undefined) {
@@ -89,7 +89,13 @@ export default async function parseQuiz(config: CanvasConfig, outConfig: OutputC
         const overall = generateHtml(responses.slice(i, endInd));
         const pgInd = `${i / 10}`.padStart(2, "0");
         if (browser !== undefined) {
-            await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
+            try {
+                await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
+            } catch {
+                // browser failed, and should be closed; remake the browser and attempt again...
+                browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+                await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
+            }
         } else {
             process.stdout.write(overall);
         }
