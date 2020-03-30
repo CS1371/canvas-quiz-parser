@@ -94,7 +94,7 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
             login: login.login_id,
             email: login.email,
             name: login.name,
-            gtid: login.sis_user_id,
+            sisid: login.sis_user_id,
             responses
         };
     });
@@ -106,7 +106,7 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
         login: "",
         email: "null",
         name: "",
-        gtid: "",
+        sisid: "",
         responses: questions.map(quest => dispatchResponse("", quest)),
     };
     return [ template, ...roster.map(stud => {
@@ -121,7 +121,7 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
                 login: stud.login_id,
                 email: stud.email,
                 name: stud.name,
-                gtid: stud.sis_user_id,
+                sisid: stud.sis_user_id,
                 responses: resps,
             };
         }

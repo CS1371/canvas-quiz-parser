@@ -1,3 +1,3 @@
 export { default as getQuestions } from "./getQuestions";
 export { default as getStudents } from "./getStudents";
-export { default as getCSV } from "./getCSV";
+export { default as requestCSV } from "./requestCSV";

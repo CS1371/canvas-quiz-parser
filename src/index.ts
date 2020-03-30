@@ -1,10 +1,18 @@
+#!/usr/bin/env node
 import puppeteer from "puppeteer";
 import fs from "fs";
 import rimraf from "rimraf";
-import { getStudents, getCSV, getQuestions } from "./canvas";
+import { getStudents, requestCSV, getQuestions } from "./canvas";
 import { parseResponses, generateHtml } from "./conversion";
 import { CanvasConfig } from "./types";
+import yargs from "yargs";
 import printPDF from "./conversion/generatePDF";
+
+
+interface OutputConfig {
+    outDir?: string;
+    template: boolean;
+}
 
 /**
  * parseQuiz will fetch, parse, and fill in quiz results
@@ -20,7 +28,7 @@ import printPDF from "./conversion/generatePDF";
  * @param token The Canvas API token
  * @param outDir The output directory; if it does not exist, it is created. If it already exists, it is deleted.
  */
-export default async function parseQuiz(site: string, course: string, quiz: string, token: string, outDir: string): Promise<void> {
+export default async function parseQuiz(config: CanvasConfig, outConfig: OutputConfig): Promise<void> {
     /*
     const evil = String.raw`*\\,:;&$%^#@'<>?,\\\, \\\,\, \\,\, \\\,\\,ℂ◉℗⒴ ℘ⓐṨͲℰ Ⓒℌ◭ℝ◬ℂ⒯℮ℛ ,`;
     console.log(evil.replace(/\\,/gi, '_'));
@@ -44,10 +52,10 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
     */
     // 1. Fetching
     // start up browser
-    const launcher = puppeteer.launch({ headless: true });
+    const { outDir, template: includeTemplate } = outConfig;
+    const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true });
     
-    const config: CanvasConfig = { site, course, quiz, token };
-    const csvReporter = getCSV(config);
+    const csvReporter = requestCSV(config);
     const studentReporter = getStudents(config);
     const questionReporter = getQuestions(config);
 
@@ -59,14 +67,22 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
     const template = combined[0];
     const responses = combined.slice(1);
     // stream every 10 students
-    if (fs.existsSync(outDir)) {
-        rimraf.sync(outDir);
+    if (outDir !== undefined) {
+        if (fs.existsSync(outDir)) {
+            rimraf.sync(outDir);
+        }
+        fs.mkdirSync(outDir);
     }
-    fs.mkdirSync(outDir);
-    const browser = await launcher;
     // create template:
-    const templateHtml: string = generateHtml([template]);
-    await printPDF(templateHtml, `${outDir}/template.pdf`, browser);
+    const browser = await launcher;
+    if (includeTemplate) {
+        const templateHtml: string = generateHtml([template]);
+        if (browser !== undefined) {
+            await printPDF(templateHtml, `${outDir}/template.pdf`, browser);
+        } else {
+            process.stdout.write(templateHtml);
+        }
+    }
     responses.sort((s1, s2) => {
         return s1.login.localeCompare(s2.login);
     });
@@ -74,9 +90,71 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
         const endInd = i + 10 > responses.length ? responses.length : i + 10;
         const overall = generateHtml(responses.slice(i, endInd));
         const pgInd = `${i / 10}`.padStart(2, "0");
-        await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
+        if (browser !== undefined) {
+            await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
+        } else {
+            process.stdout.write(overall);
+        }
     }
-    await browser.close();
+    if (browser !== undefined) {
+        await browser.close();
+    }
 }
 
-parseQuiz(process.argv[2], process.argv[3], process.argv[4], process.argv[5], process.argv[6]);
+const args = yargs
+    .command("parse [OPTS]", "Parse a Canvas Quiz and Responses into a unified PDF")
+    .usage("Usage: $0 -s [SITE] -c [COURSE] -q [QUIZ] -t [TOKEN] [-o [OUT]]")
+    .version("1.0.0")
+    .option("site", {
+        alias: "s",
+        describe: "The base site, such as instructure.university.com",
+        demandOption: true,
+        nargs: 1,
+        string: true,
+    })
+    .option("course", {
+        alias: "c",
+        describe: "The course ID that this quiz belongs to",
+        demandOption: true,
+        nargs: 1,
+        string: true,
+    })
+    .option("quiz", {
+        alias: "q",
+        describe: "The ID of the quiz you would ike parsed",
+        demandOption: true,
+        nargs: 1,
+        string: true,
+    })
+    .option("token", {
+        alias: "t",
+        describe: "Your Canvas API Token. Usually begins with 2096~",
+        demandOption: true,
+        nargs: 1,
+        string: true,
+    })
+    .option("output", {
+        alias: "o",
+        describe: "The output folder destination. If not given, the raw HTML is given in stdout",
+        demandOption: false,
+        nargs: 1,
+        string: true,
+    })
+    .option("template", {
+        describe: "Include the template. Defaults to true",
+        demandOption: false,
+        nargs: 1,
+        boolean: true,
+        default: true,
+    })
+    .help()
+    .argv;
+
+const config: CanvasConfig = {
+    course: args.course,
+    site: args.site,
+    quiz: args.quiz,
+    token: args.token,
+};
+
+parseQuiz(config, { outDir: args.output, template: args.template });
