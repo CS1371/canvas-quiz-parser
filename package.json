@@ -1,13 +1,14 @@
 {
   "name": "canvas-quiz-parser",
   "version": "1.0.0",
-  "description": "Parse Canvas Quizzes via the API into portable JSON",
+  "description": "Parse Canvas Quizzes and their responses into HTML or PDF",
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
     "lint": "npx eslint src/**/*.ts",
     "lint-fix": "npx eslint src/**/*.ts",
-    "build": "npx eslint src/**/*.ts && npx tsc"
+    "build": "npx eslint src/**/*.ts && npx tsc",
+    "test": "echo \"No Tests Available\""
   },
   "repository": {
     "type": "git",
