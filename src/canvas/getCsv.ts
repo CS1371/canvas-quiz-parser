@@ -1,13 +1,13 @@
 import fetch from "node-fetch";
 import { CanvasConfig } from "../types";
 /**
- * getCsv will return a Promise that resolves to the raw CSV textual data.
+ * getCSV will return a Promise that resolves to the raw CSV textual data.
  * This uses the Canvas LMS API - specifically the Quiz Reports section. For
  * more information, look at the Canvas API Documentation.
  * @param config The Canvas Configuration
  * @returns A string, which represents the raw CSV output
  */
-export default async function getCsv(config: CanvasConfig): Promise<string> {
+async function getCSV(config: CanvasConfig): Promise<string> {
     const reportApi = `https://${config.site}/api/v1/courses/${config.course}/quizzes/${config.quiz}/reports`
         + "?quiz_report[report_type]=student_analysis&"
         + "include[]=progress&include[]=file&quiz_report[includes_all_versions]=true";
@@ -51,4 +51,6 @@ export default async function getCsv(config: CanvasConfig): Promise<string> {
             });
         })
         .then(resp => resp.text());
-}
+};
+
+export default getCSV;

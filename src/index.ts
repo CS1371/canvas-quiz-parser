@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer";
 import fs from "fs";
 import rimraf from "rimraf";
-import { getStudents, getCsv, getQuestions } from "./canvas";
+import { getStudents, getCSV, getQuestions } from "./canvas";
 import { parseResponses, generateHtml } from "./conversion";
 import { CanvasConfig } from "./types";
 import printPDF from "./conversion/generatePDF";
@@ -47,7 +47,7 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
     const launcher = puppeteer.launch({ headless: true });
     
     const config: CanvasConfig = { site, course, quiz, token };
-    const csvReporter = getCsv(config);
+    const csvReporter = getCSV(config);
     const studentReporter = getStudents(config);
     const questionReporter = getQuestions(config);
 
