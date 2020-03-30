@@ -101,7 +101,15 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
     questions.sort((q1, q2) => {
         return (q1.position - q2.position) || (parseInt(q1.id) - parseInt(q2.id));
     });
-    return roster.map(stud => {
+    const template: Student = {
+        id: "-1",
+        login: "",
+        email: "null",
+        name: "",
+        gtid: "",
+        responses: questions.map(quest => dispatchResponse("", quest)),
+    };
+    return [ template, ...roster.map(stud => {
         const sub = submissions.find(other => other.id === stud.id.toString());
         if (sub !== undefined) {
             return sub;
@@ -117,7 +125,7 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
                 responses: resps,
             };
         }
-    });
+    })];
 };
 
 export default parseResponses;

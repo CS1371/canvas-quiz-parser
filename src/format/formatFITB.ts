@@ -12,13 +12,13 @@ const formatFITB = (qr: FITBQuizResponse): string => {
     if (response === undefined) {
         return formatBlank(qr);
     }
-    const { prompt, name, blanks } = question;
+    const { prompt, name, blanks, id } = question;
     const qa = blanks.map((b, i) => {
         // UNSAFE: HTML INJECTION
         return `<p>${b}<code>${response[i]}</code></p>`;
     });
     // UNSAFE: HTML INJECTION
-    return `<div class="question mfitb"><h2>${name}</h2>${prompt}<div class="mfitb-answers">${qa.join("")}</div></div>`;
+    return `<div class="question mfitb"><h2>${name}</h2><p class="question-id"><em>${id}</em></p>${prompt}<div class="fitb-answers">${qa.join("")}</div></div>`;
 };
 
 export default formatFITB;

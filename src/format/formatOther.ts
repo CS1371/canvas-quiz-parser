@@ -11,8 +11,8 @@ const formatOther = (qr: QuizResponse): string => {
     if (qr.response === undefined) {
         return formatBlank(qr);
     }
-    const { name, prompt } = question;
-    return `<div class="question other"><h2>${name}</h2>${prompt}<p>${response}</p></div>`;
+    const { name, prompt, id } = question;
+    return `<div class="question other"><h2>${name}</h2><p class="question-id"><em>${id}</em></p>${prompt}<pre>${response}</pre></div>`;
 };
 
 export default formatOther;

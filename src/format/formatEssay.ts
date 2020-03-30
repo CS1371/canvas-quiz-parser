@@ -11,9 +11,9 @@ const formatEssay = (qr: EssayQuizResponse): string => {
     if (response === undefined) {
         return formatBlank(qr);
     }
-    const { name, prompt } = question;
+    const { name, prompt, id } = question;
     // UNSAFE: HTML INJECTION
-    return `<div class="question essay"><h2>${name}</h2>${prompt}<pre>${response}</pre></div>`;
+    return `<div class="question essay"><h2>${name}</h2><p class="question-id"><em>${id}</em></p>${prompt}<pre>${response}</pre></div>`;
 };
 
 export default formatEssay;

@@ -2,14 +2,9 @@ import puppeteer from "puppeteer";
 import fs from "fs";
 import rimraf from "rimraf";
 import { getStudents, getCsv, getQuestions } from "./canvas";
-import { parseResponses } from "./conversion";
-import formatMultipleFITB from "./format/formatFITB";
-import { CanvasConfig, QuestionType } from "./types";
-import formatEssay from "./format/formatEssay";
-import formatOther from "./format/formatOther";
-import formatCover from "./format/formatCover";
+import { parseResponses, generateHtml } from "./conversion";
+import { CanvasConfig } from "./types";
 import printPDF from "./conversion/generatePDF";
-import parse from 'csv-parse/lib/sync';
 
 /**
  * parseQuiz will fetch, parse, and fill in quiz results
@@ -60,31 +55,21 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
     // Parse their responses, providing the question library.
     // We're guaranteed that every question will be accounted for.
     // 2. We'll have to wait on csv Reporter, but then convert
-    const responses = parseResponses(await csvReporter, await questionReporter, await studentReporter);
-
+    const combined = parseResponses(await csvReporter, await questionReporter, await studentReporter);
+    const template = combined[0];
+    const responses = combined.slice(1);
     // stream every 10 students
     if (fs.existsSync(outDir)) {
         rimraf.sync(outDir);
     }
     fs.mkdirSync(outDir);
     const browser = await launcher;
+    // create template:
+    const templateHtml: string = generateHtml([template]);
+    await printPDF(templateHtml, `${outDir}/template.pdf`, browser);
     for (let i = 0; i < responses.length; i += 10) {
         const endInd = i + 10 > responses.length ? responses.length : i + 10;
-        const html: string[] = responses.slice(i, endInd).map(resp => {
-            return [formatCover(resp), ...resp.responses.map(qr => {
-                if (qr.type === QuestionType.ESSAY) {
-                    return formatEssay(qr);
-                } else if (qr.type === QuestionType.FITB) {
-                    return formatMultipleFITB(qr);
-                } else {
-                    return formatOther(qr);
-                }
-            })].join("");
-        })
-            .map(studHtml => {
-                return `<div class="student">${studHtml}</div>`;
-            });
-        const overall = `<!DOCTYPE html><html><head><meta charset="utf8"><style>.cover-page { text-decoration: underline; text-align: center; break-after: page; font-family: 'Courier New'; } .cover-page h1 { font-size: 200%; } .cover-page p { font-size: 150%; } .question { break-after: page } .question.essay { min-height: 20in; max-height: 20in; overflow: hidden; } .question.essay img { break-after: page } img {height: 50% !important; width: 50% !important; }</style></head><body><div class="root">${html.join("")}</div></body></html>`;
+        const overall = generateHtml(responses.slice(i, endInd));
         const pgInd = `${i / 10}`.padStart(2, "0");
         await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
     }
