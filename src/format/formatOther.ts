@@ -12,6 +12,7 @@ const formatOther = (qr: QuizResponse): string => {
         return formatBlank(qr);
     }
     const { name, prompt, id } = question;
+    // UNSAFE: HTML INJECTION
     return `<div class="question other"><h2>${name}</h2><p class="question-id"><em>${id}</em></p>${prompt}<pre>${response}</pre></div>`;
 };
 

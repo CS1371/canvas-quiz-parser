@@ -67,6 +67,9 @@ export default async function parseQuiz(site: string, course: string, quiz: stri
     // create template:
     const templateHtml: string = generateHtml([template]);
     await printPDF(templateHtml, `${outDir}/template.pdf`, browser);
+    responses.sort((s1, s2) => {
+        return s1.login.localeCompare(s2.login);
+    });
     for (let i = 0; i < responses.length; i += 10) {
         const endInd = i + 10 > responses.length ? responses.length : i + 10;
         const overall = generateHtml(responses.slice(i, endInd));
