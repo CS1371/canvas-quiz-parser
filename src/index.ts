@@ -22,11 +22,9 @@ interface OutputConfig {
  * 
  * For a more fine-grained approach, look at the member functions of each
  * sub module.
- * @param site The Base Site (i.e., "institute.instructure.com")
- * @param course The Course ID
- * @param quiz The Quiz ID
- * @param token The Canvas API token
- * @param outDir The output directory; if it does not exist, it is created. If it already exists, it is deleted.
+ * @param config The Canvas Configuration to use
+ * @param outConfig The output configuration to use
+ * @returns A Promise that resolves when this function is completely done and disposal is complete.
  */
 export default async function parseQuiz(config: CanvasConfig, outConfig: OutputConfig): Promise<void> {
     /*
