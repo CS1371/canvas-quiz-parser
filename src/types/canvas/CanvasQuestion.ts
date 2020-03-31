@@ -5,7 +5,7 @@ export interface CanvasQuestion {
     quiz_id: number;
     quiz_group_id: number;
     assessment_question_id: number;
-    position: number;
+    position: number|null;
     question_name: string;
     question_type: QuestionType;
     question_text: string;

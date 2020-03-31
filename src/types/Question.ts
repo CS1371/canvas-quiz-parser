@@ -7,6 +7,7 @@ export interface Question {
     name: string;
     prompt: string;
     position: number;
+    groupPosition: string;
 };
 
 export interface FITB extends Question {

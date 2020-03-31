@@ -1,6 +1,26 @@
 import { CanvasConfig, Question, CanvasQuestion, QuestionType, FITB, Essay } from "../types";
 import fetch from "node-fetch";
 
+const computePosition = (question: CanvasQuestion): number => {
+    // get # from' #.p'
+    const start = question.question_name.lastIndexOf(" ");
+    const stop = question.question_name.lastIndexOf(".");
+    if (start === -1 || stop === -1) {
+        return -1;
+    }
+    return parseInt(question.question_name.slice(start + 1, stop));
+};
+
+const computeGroupPosition = (question: CanvasQuestion): string => {
+    // guarantee last one is #.P; get last index of . and work forrwards
+    const ind = question.question_name.lastIndexOf(".");
+    // if it's not there, just ""
+    if (ind === -1) {
+        return "";
+    }
+    return question.question_name.slice(ind + 1);
+};
+
 const convertFITB = (question: CanvasQuestion): FITB => {
     const txt = question.question_text.replace(/\n/gi, "");
     const parts = txt.split("</p><p>");
@@ -20,7 +40,8 @@ const convertFITB = (question: CanvasQuestion): FITB => {
         type: QuestionType.FITB,
         points: question.points_possible,
         name: question.question_name,
-        position: question.position,
+        position: computePosition(question),
+        groupPosition: computeGroupPosition(question),
         id: question.id.toString(),
         prompt: parts[0],
         blanks
@@ -33,7 +54,8 @@ const convertEssay = (question: CanvasQuestion): Essay => {
         type: QuestionType.ESSAY,
         points: question.points_possible,
         name: question.question_name,
-        position: question.position,
+        position: computePosition(question),
+        groupPosition: computeGroupPosition(question),
         prompt: question.question_text,
     };
 };
@@ -45,7 +67,8 @@ const convertOther = (question: CanvasQuestion): Question => {
         points: question.points_possible,
         name: question.question_name,
         prompt: question.question_text,
-        position: question.position,
+        position: computePosition(question),
+        groupPosition: computeGroupPosition(question),
     };
 };
 

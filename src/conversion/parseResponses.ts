@@ -100,7 +100,7 @@ const parseResponses = async (data: string, roster: CanvasStudent[], config: Can
         }];
     });
     questions.sort((q1, q2) => {
-        return (q1.position - q2.position) || (parseInt(q1.id) - parseInt(q2.id));
+        return (q1.position - q2.position) || q1.groupPosition.localeCompare(q2.groupPosition);
     });
     const template: Student = {
         id: "-1",
