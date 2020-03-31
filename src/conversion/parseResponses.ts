@@ -103,10 +103,10 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
     });
     const template: Student = {
         id: "-1",
-        login: "",
+        login: "_______________",
         email: "null",
-        name: "",
-        sisid: "",
+        name: "_______________",
+        sisid: "_______________",
         responses: questions.map(quest => dispatchResponse("", quest)),
     };
     return [ template, ...roster.map(stud => {
