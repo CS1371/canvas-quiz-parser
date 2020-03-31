@@ -2,14 +2,15 @@
 import puppeteer from "puppeteer";
 import fs from "fs";
 import rimraf from "rimraf";
-import { getStudents, requestCSV, getQuestions } from "./canvas";
+import { getStudents, requestCSV } from "./canvas";
 import { parseResponses, generateHtml } from "./conversion";
 import { CanvasConfig } from "./types";
 import yargs from "yargs";
 import printPDF from "./conversion/generatePDF";
 
 
-interface OutputConfig {
+interface DataConfig {
+    input?: string;
     outDir?: string;
     template: boolean;
 }
@@ -26,7 +27,7 @@ interface OutputConfig {
  * @param outConfig The output configuration to use
  * @returns A Promise that resolves when this function is completely done and disposal is complete.
  */
-export default async function parseQuiz(config: CanvasConfig, outConfig: OutputConfig): Promise<void> {
+export default async function parseQuiz(config: CanvasConfig, ioConfig: DataConfig): Promise<void> {
     /*
     const evil = String.raw`*\\,:;&$%^#@'<>?,\\\, \\\,\, \\,\, \\\,\\,ℂ◉℗⒴ ℘ⓐṨͲℰ Ⓒℌ◭ℝ◬ℂ⒯℮ℛ ,`;
     console.log(evil.replace(/\\,/gi, '_'));
@@ -50,18 +51,17 @@ export default async function parseQuiz(config: CanvasConfig, outConfig: OutputC
     */
     // 1. Fetching
     // start up browser
-    const { outDir, template: includeTemplate } = outConfig;
+    const { outDir, template: includeTemplate, input } = ioConfig;
     const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     
-    const csvReporter = requestCSV(config);
+    const csvReporter = input === undefined ? requestCSV(config) : Promise.resolve(fs.readFileSync(input).toString());
     const studentReporter = getStudents(config);
-    const questionReporter = getQuestions(config);
 
     // now that we have questions and students, matchmake!
     // Parse their responses, providing the question library.
     // We're guaranteed that every question will be accounted for.
     // 2. We'll have to wait on csv Reporter, but then convert
-    const combined = parseResponses(await csvReporter, await questionReporter, await studentReporter);
+    const combined = await parseResponses(await csvReporter, await studentReporter, config);
     const template = combined[0];
     const responses = combined.slice(1);
     // stream every 10 students
@@ -152,6 +152,13 @@ const args = yargs
         boolean: true,
         default: true,
     })
+    .option("input", {
+        describe: "The input CSV file; if none given, we will use the API",
+        demandOption: false,
+        nargs: 1,
+        string: true,
+        default: undefined,
+    })
     .help()
     .argv;
 
@@ -162,4 +169,4 @@ const config: CanvasConfig = {
     token: args.token,
 };
 
-parseQuiz(config, { outDir: args.output, template: args.template });
+parseQuiz(config, { input: args.input, outDir: args.output, template: args.template });

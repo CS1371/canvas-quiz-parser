@@ -39,6 +39,7 @@ const generateHtml = (students: Student[]): string => {
     .question.essay img { break-after: page } 
     .question-id { font-size: 75%; color: darkgrey; margin: 0; padding: 0; } 
     img { height: 50% !important; width: 50% !important; }
+    pre { white-space: pre-wrap; } 
     </style>
     </head><body><div class="root">${html.join("")}</div></body></html>`;
 };

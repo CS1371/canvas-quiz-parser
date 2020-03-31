@@ -7,7 +7,9 @@ import {
     QuizResponse,
     CanvasStudent,
     QuestionType,
+    CanvasConfig,
 } from "../types";
+import { getQuestion } from "../canvas";
 
 const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
     if (ans !== "") {
@@ -18,7 +20,6 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
                 response: ans,
             };
         } else if (quest.type === QuestionType.FITB) {
-
             // Split blanks. ONLY invalid character is \n. Replace \, with it, then split, then re-engage:
             const sanitized = ans.replace(/\\,/gi, "\n");
             const answers = sanitized.split(",").map(a => a.replace(/\n/gi, ","));
@@ -57,14 +58,16 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
 
 /**
  * Parse quiz responses and generate their JSON equivalent.
- * @param data The raw CSV data from the CSV report; @see getCsv
- * @param questionBank The bank of all questions; note that not all of them may be used. Order is not important; @see getQuestions
+ * @param data The raw CSV data from the CSV report; @see requestCSV
  * @param roster The students to interleave into the responses; students who did not submit anything will also be included
- * @returns An array of complete Student responses.
- * @throws Unkown Student Encountered, if there is a student in the responses that is not in the roster
+ * @param config The Canvas configuration to use when fetching questions; @see getQuestion
+ * @returns A Promise that resolves to an array of complete Student responses.
  */
-const parseResponses = (data: string, questionBank: Question[], roster: CanvasStudent[]): Student[] => {
-    const output = parse(data, {}) as string[][];
+const parseResponses = async (data: string, roster: CanvasStudent[], config: CanvasConfig): Promise<Student[]> => {
+    const output = parse(data, {
+        bom: true,
+    }) as string[][];
+    //console.log(output);
     const header = output[0];
     const idCol = header.lastIndexOf("id");
     const questionStartCol = Math.max(header.lastIndexOf("submitted"), header.lastIndexOf("attempt")) + 1;
@@ -73,30 +76,28 @@ const parseResponses = (data: string, questionBank: Question[], roster: CanvasSt
     const questions: Question[] = [];
     for (let j = questionStartCol; j < questionStopCol; j += 2) {
         const qId = header[j].split(":")[0];
-        const quest = questionBank.find(q => q.id === qId);
-        if (quest !== undefined) {
-            questions.push(quest);
-        }
+        questions.push(await getQuestion(config, qId));
     }
-    const submissions: Student[] = output.slice(1).map(record => {
+
+    const submissions: Student[] = output.slice(1).flatMap(record => {
+        const login = roster.find(s => s.id.toString() === record[idCol]);
+        if (login === undefined) {
+            return [];
+        }
         const responses: QuizResponse[] = questions.map((quest, q) => {
             const ind = questionStartCol + (q * 2);
             return dispatchResponse(record[ind], quest);
         }).sort((qr1, qr2) => {
             return (qr1.question.position - qr2.question.position) || (parseInt(qr1.question.id) - parseInt(qr2.question.id));
         });
-        const login = roster.find(s => s.id.toString() === record[idCol]);
-        if (login === undefined) {
-            throw new Error("Unknown student encountered!");
-        }
-        return {
+        return [{
             id: record[idCol],
             login: login.login_id,
             email: login.email,
             name: login.name,
             sisid: login.sis_user_id,
             responses
-        };
+        }];
     });
     questions.sort((q1, q2) => {
         return (q1.position - q2.position) || (parseInt(q1.id) - parseInt(q2.id));
