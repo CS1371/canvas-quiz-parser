@@ -1,11 +1,14 @@
 {
   "name": "canvas-quiz-parser",
-  "version": "0.0.1",
-  "description": "Parse Canvas Quizzes via the API into portable JSON",
+  "version": "1.0.0",
+  "description": "Parse Canvas Quizzes and their responses into HTML or PDF",
   "main": "index.js",
   "scripts": {
-    "start": "rimraf lib && mkdir lib && babel src --watch --out-dir lib",
-    "build": "eslint src && rimraf lib && mkdir lib && babel src --out-dir lib"
+    "tsc": "tsc",
+    "lint": "npx eslint src/**/*.ts",
+    "lint-fix": "npx eslint src/**/*.ts",
+    "build": "npx eslint src/**/*.ts && npx tsc",
+    "test": "echo \"No Tests Available\""
   },
   "repository": {
     "type": "git",
@@ -23,15 +26,25 @@
   },
   "homepage": "https://github.com/CS1371/canvas-quiz-parser#readme",
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
-    "@babel/preset-env": "^7.3.1",
-    "eslint": "^5.13.0",
-    "jsdoc": "^3.5.5",
-    "rimraf": "^2.6.3"
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.0",
+    "@types/node": "^13.9.5",
+    "@types/node-fetch": "^2.5.5",
+    "@types/puppeteer": "^2.0.1",
+    "@types/rimraf": "^3.0.0",
+    "@types/yargs": "^15.0.4",
+    "@typescript-eslint/eslint-plugin": "^2.25.0",
+    "@typescript-eslint/parser": "^2.25.0",
+    "eslint": "^5.16.0",
+    "jsdoc": "^3.6.3",
+    "typescript": "^3.8.3"
   },
   "dependencies": {
-    "csv-parse": "^4.3.1",
-    "node-fetch": "^2.3.0"
+    "csv-parse": "^4.8.8",
+    "node-fetch": "^2.6.0",
+    "puppeteer": "^2.1.1",
+    "rimraf": "^3.0.2",
+    "yargs": "^15.3.1"
   }
 }
