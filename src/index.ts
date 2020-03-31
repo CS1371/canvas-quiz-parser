@@ -13,6 +13,7 @@ interface DataConfig {
     input?: string;
     outDir?: string;
     template: boolean;
+    chunk: number;
 }
 
 /**
@@ -27,7 +28,7 @@ interface DataConfig {
  * @param outConfig The output configuration to use
  * @returns A Promise that resolves when this function is completely done and disposal is complete.
  */
-export default async function parseQuiz(config: CanvasConfig, ioConfig: DataConfig): Promise<void> {
+export default async function parseQuiz(config: CanvasConfig, dataConfig: DataConfig): Promise<void> {
     /*
     const evil = String.raw`*\\,:;&$%^#@'<>?,\\\, \\\,\, \\,\, \\\,\\,ℂ◉℗⒴ ℘ⓐṨͲℰ Ⓒℌ◭ℝ◬ℂ⒯℮ℛ ,`;
     console.log(evil.replace(/\\,/gi, '_'));
@@ -51,7 +52,7 @@ export default async function parseQuiz(config: CanvasConfig, ioConfig: DataConf
     */
     // 1. Fetching
     // start up browser
-    const { outDir, template: includeTemplate, input } = ioConfig;
+    const { outDir, template: includeTemplate, input, chunk } = dataConfig;
     const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     
     const csvReporter = input === undefined ? requestCSV(config) : Promise.resolve(fs.readFileSync(input).toString());
@@ -64,7 +65,7 @@ export default async function parseQuiz(config: CanvasConfig, ioConfig: DataConf
     const combined = await parseResponses(await csvReporter, await studentReporter, config);
     const template = combined[0];
     const responses = combined.slice(1);
-    // stream every 10 students
+    // stream every chunk students
     if (outDir !== undefined) {
         if (fs.existsSync(outDir)) {
             rimraf.sync(outDir);
@@ -84,18 +85,19 @@ export default async function parseQuiz(config: CanvasConfig, ioConfig: DataConf
     responses.sort((s1, s2) => {
         return s1.login.localeCompare(s2.login);
     });
-    for (let i = 0; i < responses.length; i += 10) {
-        const endInd = i + 10 > responses.length ? responses.length : i + 10;
+    const chunkSize = chunk === 0 ? 1 : chunk;
+    for (let i = 0; i < responses.length; i += chunkSize) {
+        const endInd = i + chunkSize > responses.length ? responses.length : i + chunkSize;
         const overall = generateHtml(responses.slice(i, endInd));
-        const pgInd = `${i / 10}`.padStart(2, "0");
+        const pName = chunk === 0 ? responses[i].login  : `${i / 10}`.padStart(2, "0");
         if (browser !== undefined) {
             try {
-                await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
+                await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
             } catch {
                 // browser failed, but we need to formally close it. remake the browser and attempt again...
                 await browser.close();
                 browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
-                await printPDF(overall, `${outDir}/${pgInd}.pdf`, browser);
+                await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
             }
         } else {
             process.stdout.write(overall);
@@ -153,11 +155,19 @@ const args = yargs
         default: true,
     })
     .option("input", {
+        alias: "i",
         describe: "The input CSV file; if none given, we will use the API",
         demandOption: false,
         nargs: 1,
         string: true,
         default: undefined,
+    })
+    .option("chunk", {
+        describe: "The chunk size to use for generating HTML and PDF. If 0, then each student gets their own PDF, which is named <login_id>.pdf",
+        demandOption: false,
+        nargs: 1,
+        number: true,
+        default: 10,
     })
     .help()
     .argv;
@@ -169,4 +179,11 @@ const config: CanvasConfig = {
     token: args.token,
 };
 
-parseQuiz(config, { input: args.input, outDir: args.output, template: args.template });
+const data: DataConfig = {
+    outDir: args.output,
+    input: args.input,
+    template: args.template,
+    chunk: args.chunk,
+};
+
+parseQuiz(config, data);
