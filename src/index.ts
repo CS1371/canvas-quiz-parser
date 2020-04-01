@@ -8,14 +8,15 @@ import { CanvasConfig } from "./types";
 import yargs from "yargs";
 import printPDF from "./conversion/generatePDF";
 
-
-interface DataConfig {
+interface ParserConfig {
+    canvas: CanvasConfig;
     input?: string;
     outDir?: string;
-    template: string;
+    template?: string;
     chunk: number;
     attemptStrategy: "first"|"last"|"all";
-}
+    includeNoSubs: boolean;
+};
 
 /**
  * parseQuiz will fetch, parse, and fill in quiz results
@@ -29,7 +30,7 @@ interface DataConfig {
  * @param outConfig The output configuration to use
  * @returns A Promise that resolves when this function is completely done and disposal is complete.
  */
-export default async function parseQuiz(config: CanvasConfig, dataConfig: DataConfig): Promise<void> {
+export default async function parseQuiz(config: ParserConfig): Promise<void> {
     /*
     const evil = String.raw`*\\,:;&$%^#@'<>?,\\\, \\\,\, \\,\, \\\,\\,ℂ◉℗⒴ ℘ⓐṨͲℰ Ⓒℌ◭ℝ◬ℂ⒯℮ℛ ,`;
     console.log(evil.replace(/\\,/gi, '_'));
@@ -53,19 +54,33 @@ export default async function parseQuiz(config: CanvasConfig, dataConfig: DataCo
     */
     // 1. Fetching
     // start up browser
-    const { outDir, template: includeTemplate, input, chunk, attemptStrategy } = dataConfig;
+    const {
+        canvas,
+        outDir,
+        template: includeTemplate,
+        input,
+        chunk,
+        attemptStrategy,
+        includeNoSubs,
+    } = config;
     const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     
-    const csvReporter = input === undefined ? requestCSV(config) : Promise.resolve(fs.readFileSync(input).toString());
-    const studentReporter = getStudents(config);
+    const csvReporter = input === undefined ? requestCSV(canvas) : Promise.resolve(fs.readFileSync(input).toString());
+    const studentReporter = getStudents(canvas);
 
     // now that we have questions and students, matchmake!
     // Parse their responses, providing the question library.
     // We're guaranteed that every question will be accounted for.
     // 2. We'll have to wait on csv Reporter, but then convert
-    const combined = await parseResponses(await csvReporter, await studentReporter, { canvas: config, attemptStrategy });
+    const combined = await parseResponses(await csvReporter, await studentReporter, { canvas, attemptStrategy  });
     const template = combined[0];
-    const responses = combined.slice(1);
+    const responses = combined.slice(1).filter(stud => {
+        if (includeNoSubs) {
+            return true;
+        } else {
+            return stud.attempt !== 0;
+        }
+    });
     // stream every chunk students
     if (outDir !== undefined) {
         if (fs.existsSync(outDir)) {
@@ -189,22 +204,29 @@ const args = yargs
         string: true,
         default: "last",
     })
+    .option("include-no-sub", {
+        describe: "Whether or not to include students without a submission.",
+        demandOption: false,
+        nargs: 1,
+        boolean: true,
+        default: true,
+    })
     .help()
     .argv;
 
-const config: CanvasConfig = {
-    course: args.course,
-    site: args.site,
-    quiz: args.quiz,
-    token: args.token,
-};
-
-const data: DataConfig = {
+const config: ParserConfig = {
+    canvas: {
+        course: args.course,
+        site: args.site,
+        quiz: args.quiz,
+        token: args.token,
+    },
     outDir: args.output,
     input: args.input,
     template: args.template,
     chunk: args.chunk,
     attemptStrategy: args["attempt-strategy"] as "first"|"last"|"all",
+    includeNoSubs: args["include-no-sub"],
 };
 
-parseQuiz(config, data);
+parseQuiz(config);
