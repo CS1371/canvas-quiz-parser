@@ -61,6 +61,12 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
     }
 };
 
+interface Output {
+    template: Student;
+    students: Student[];
+    questions: Question[];
+}
+
 /**
  * Parse quiz responses and generate their JSON equivalent.
  * @param data The raw CSV data from the CSV report; @see requestCSV
@@ -68,7 +74,7 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
  * @param config The Canvas configuration to use when fetching questions; @see getQuestion
  * @returns A Promise that resolves to an array of complete Student responses.
  */
-const parseResponses = async (data: string, roster: CanvasStudent[], config: ParseConfig): Promise<Student[]> => {
+const parseResponses = async (data: string, roster: CanvasStudent[], config: ParseConfig): Promise<Output> => {
     const output = parse(data, {
         bom: true,
     }) as string[][];
@@ -127,7 +133,7 @@ const parseResponses = async (data: string, roster: CanvasStudent[], config: Par
         attempt: 0,
         responses: questions.map(quest => dispatchResponse("", quest)),
     };
-    return [ template, ...roster.map(stud => {
+    const students = roster.map(stud => {
         const sub = submissions.find(other => other.id === stud.id.toString());
         if (sub !== undefined) {
             return sub;
@@ -144,7 +150,8 @@ const parseResponses = async (data: string, roster: CanvasStudent[], config: Par
                 responses: resps,
             };
         }
-    })];
+    });
+    return { template, students, questions };
 };
 
 export default parseResponses;
