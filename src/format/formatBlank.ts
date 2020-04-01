@@ -14,7 +14,7 @@ const formatBlank = (qr: QuizResponse): string => {
     }
     const { name, id, prompt } = question;
     // UNSAFE: HTML INJECTION
-    return `<div class="question essay"><h2>${name}</h2><p class="question-id"><em>${id}</em></p>${prompt}<p class="no-submission">NO SUBMISSION</p></div>`;
+    return `<div class="question essay"><h2>${name}</h2><p class="question-id"><em>${id}</em></p>${prompt}<div class="answer"><pre>NO SUBMISSION</pre></div></div>`;
 };
 
 export default formatBlank;

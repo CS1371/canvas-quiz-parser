@@ -33,10 +33,10 @@ const generateHtml = (students: Student[]): string => {
     .cover-page h1, .cover-page p { margin-top: 50px; margin-bottom: 50px; } 
     .cover-page h1 { font-size: 200%; } 
     .cover-page p { font-size: 150%; } 
-    .question { break-after: page } 
+    .question, .question img { break-after: page; } 
+    .question .answer { break-before: page; }
     .question h2 { margin-bottom: 0; padding-bottom: 0; } 
-    .question.essay { min-height: 20in; max-height: 20in; overflow: hidden; } 
-    .question.essay img { break-after: page } 
+    .question.essay .answer { min-height: 20in; max-height: 20in; overflow: hidden; } 
     .question-id { font-size: 75%; color: darkgrey; margin: 0; padding: 0; } 
     img { height: 50% !important; width: 50% !important; }
     pre { white-space: pre-wrap; } 
