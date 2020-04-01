@@ -19,7 +19,7 @@ async function getCSV(config: CanvasConfig): Promise<string> {
         }
     })
         .then(resp => resp.json() as Promise<{ id: string; progress_url: string }>)
-        .then(async resp => {
+        .then(async (resp): Promise<{ file: { url: string } }> => {
         // check progress every 5 seconds until workflow state is complete!
             let isDone = false;
             do {
@@ -33,15 +33,22 @@ async function getCSV(config: CanvasConfig): Promise<string> {
                         isDone = resp.completion === 100;
                     });
             } while (!isDone);
-            // It's complete! Make GET request for file itself
+            // It's complete! Make GET request for file itself. Due to caching, it might return
+            // old file value, so wait until we actually have someting
             const repApi = `https://${config.site}/api/v1/courses/${config.course}/quizzes/${config.quiz}/reports/${resp.id}?include[]=file`;
-            return fetch(repApi, {
-                headers: {
-                    Authorization: `Bearer ${config.token}`,
+            isDone = false;
+            do {
+                const payload: unknown = await fetch(repApi, {
+                    headers: {
+                        Authorization: `Bearer ${config.token}`,
+                    }
+                })
+                    .then(resp => resp.json());
+                if (Object.prototype.hasOwnProperty.call(payload, "file")) {
+                    return payload as { file: { url: string }};
                 }
-            });
+            } while (true);
         })
-        .then(resp => resp.json() as Promise<{ file: { url: string } }>)
         .then(resp => {
             // we have the response, get the file!
             return fetch(resp.file.url, {
