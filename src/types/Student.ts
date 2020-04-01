@@ -6,5 +6,6 @@ export interface Student {
     sisid: string;
     login: string;
     email: string;
+    attempt: number;
     responses: QuizResponse[];
 };

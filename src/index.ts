@@ -14,6 +14,7 @@ interface DataConfig {
     outDir?: string;
     template: string;
     chunk: number;
+    attemptStrategy: "first"|"last"|"all";
 }
 
 /**
@@ -52,7 +53,7 @@ export default async function parseQuiz(config: CanvasConfig, dataConfig: DataCo
     */
     // 1. Fetching
     // start up browser
-    const { outDir, template: includeTemplate, input, chunk } = dataConfig;
+    const { outDir, template: includeTemplate, input, chunk, attemptStrategy } = dataConfig;
     const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     
     const csvReporter = input === undefined ? requestCSV(config) : Promise.resolve(fs.readFileSync(input).toString());
@@ -62,7 +63,7 @@ export default async function parseQuiz(config: CanvasConfig, dataConfig: DataCo
     // Parse their responses, providing the question library.
     // We're guaranteed that every question will be accounted for.
     // 2. We'll have to wait on csv Reporter, but then convert
-    const combined = await parseResponses(await csvReporter, await studentReporter, config);
+    const combined = await parseResponses(await csvReporter, await studentReporter, { canvas: config, attemptStrategy });
     const template = combined[0];
     const responses = combined.slice(1);
     // stream every chunk students
@@ -93,7 +94,15 @@ export default async function parseQuiz(config: CanvasConfig, dataConfig: DataCo
     for (let i = 0; i < responses.length; i += chunkSize) {
         const endInd = i + chunkSize > responses.length ? responses.length : i + chunkSize;
         const overall = generateHtml(responses.slice(i, endInd));
-        const pName = chunk === 0 ? responses[i].login  : `${i / 10}`.padStart(2, "0");
+        let pName: string;
+        if (chunk !== 0) {
+            pName = `${i / 10}`.padStart(2, "0");
+        } else if (attemptStrategy === "all") {
+            const attemptNum = `${responses[i].attempt}`.padStart(2, "0");
+            pName = `${responses[i].login}_${attemptNum}`;
+        } else {
+            pName = responses[i].login;
+        }
         if (browser !== undefined) {
             try {
                 await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
@@ -173,6 +182,13 @@ const args = yargs
         number: true,
         default: 10,
     })
+    .option("attempt-strategy", {
+        describe: "The strategy to use to handle multiple attempts. Can be 'last', 'first', or 'all'. If 'all' is selected, and chunk size is 0, then the attempt number will be appended to the output file name.",
+        demandOption: false,
+        nargs: 1,
+        string: true,
+        default: "last",
+    })
     .help()
     .argv;
 
@@ -188,6 +204,7 @@ const data: DataConfig = {
     input: args.input,
     template: args.template,
     chunk: args.chunk,
+    attemptStrategy: args["attempt-strategy"] as "first"|"last"|"all",
 };
 
 parseQuiz(config, data);

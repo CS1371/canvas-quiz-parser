@@ -11,6 +11,11 @@ import {
 } from "../types";
 import { getQuestion } from "../canvas";
 
+interface ParseConfig {
+    canvas: CanvasConfig;
+    attemptStrategy: "first"|"last"|"all";
+}
+
 const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
     if (ans !== "") {
         if (quest.type === QuestionType.ESSAY) {
@@ -63,19 +68,20 @@ const dispatchResponse = (ans: string, quest: Question): QuizResponse => {
  * @param config The Canvas configuration to use when fetching questions; @see getQuestion
  * @returns A Promise that resolves to an array of complete Student responses.
  */
-const parseResponses = async (data: string, roster: CanvasStudent[], config: CanvasConfig): Promise<Student[]> => {
+const parseResponses = async (data: string, roster: CanvasStudent[], config: ParseConfig): Promise<Student[]> => {
     const output = parse(data, {
         bom: true,
     }) as string[][];
     const header = output[0];
     const idCol = header.lastIndexOf("id");
+    const attemptCol = header.lastIndexOf("attempt");
     const questionStartCol = Math.max(header.lastIndexOf("submitted"), header.lastIndexOf("attempt")) + 1;
     const questionStopCol = header.lastIndexOf("n correct");
     // convert header questions to literally just be ID
     const questions: Question[] = [];
     for (let j = questionStartCol; j < questionStopCol; j += 2) {
         const qId = header[j].split(":")[0];
-        questions.push(await getQuestion(config, qId));
+        questions.push(await getQuestion(config.canvas, qId));
     }
 
     const submissions: Student[] = output.slice(1).flatMap(record => {
@@ -95,8 +101,19 @@ const parseResponses = async (data: string, roster: CanvasStudent[], config: Can
             email: login.email,
             name: login.name,
             sisid: login.sis_user_id,
+            attempt: parseInt(record[attemptCol]),
             responses
         }];
+    }).filter((s, _, subs) => {
+        if (config.attemptStrategy === "all") {
+            return true;
+        } else if (config.attemptStrategy === "first") {
+            // since it's first, only return me if my attempt is 1
+            return s.attempt === 1;
+        } else if (config.attemptStrategy === "last") {
+            // since it's last, I need to get all that are mine. Then see if mine is last
+            return s.attempt === Math.max(...subs.filter(stud => stud.login === s.login).map(stud => stud.attempt));
+        }
     });
     questions.sort((q1, q2) => {
         return (q1.position - q2.position) || q1.groupPosition.localeCompare(q2.groupPosition);
@@ -107,6 +124,7 @@ const parseResponses = async (data: string, roster: CanvasStudent[], config: Can
         email: "null",
         name: "_______________",
         sisid: "_______________",
+        attempt: 0,
         responses: questions.map(quest => dispatchResponse("", quest)),
     };
     return [ template, ...roster.map(stud => {
@@ -122,6 +140,7 @@ const parseResponses = async (data: string, roster: CanvasStudent[], config: Can
                 email: stud.email,
                 name: stud.name,
                 sisid: stud.sis_user_id,
+                attempt: 0,
                 responses: resps,
             };
         }
