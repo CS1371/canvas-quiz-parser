@@ -12,7 +12,7 @@ import printPDF from "./conversion/generatePDF";
 interface DataConfig {
     input?: string;
     outDir?: string;
-    template: boolean;
+    template: string;
     chunk: number;
 }
 
@@ -74,13 +74,17 @@ export default async function parseQuiz(config: CanvasConfig, dataConfig: DataCo
     }
     // create template:
     let browser = await launcher;
-    if (includeTemplate) {
+    if (includeTemplate === "include" || includeTemplate === "only") {
         const templateHtml: string = generateHtml([template]);
         if (browser !== undefined) {
             await printPDF(templateHtml, `${outDir}/template.pdf`, browser);
         } else {
             process.stdout.write(templateHtml);
         }
+    }
+    if (includeTemplate === "only") {
+        await browser?.close();
+        return;
     }
     responses.sort((s1, s2) => {
         return s1.login.localeCompare(s2.login);
@@ -109,8 +113,8 @@ export default async function parseQuiz(config: CanvasConfig, dataConfig: DataCo
 }
 
 const args = yargs
-    .command("parse [OPTS]", "Parse a Canvas Quiz and Responses into a unified PDF")
-    .usage("Usage: $0 -s [SITE] -c [COURSE] -q [QUIZ] -t [TOKEN] [-o [OUT]]")
+    .command("[OPTS]", "Parse a Canvas Quiz and Responses into a unified PDF")
+    .usage("Usage: $0 -s [SITE] -c [COURSE] -q [QUIZ] -t [TOKEN]")
     .version("1.0.0")
     .option("site", {
         alias: "s",
@@ -148,11 +152,11 @@ const args = yargs
         string: true,
     })
     .option("template", {
-        describe: "Include the template. Defaults to true",
+        describe: "Include the template. If 'include', then the template, along with all other documents, is printed. If 'only', only the template is provided. Any other value will not include the template.",
         demandOption: false,
         nargs: 1,
-        boolean: true,
-        default: true,
+        string: true,
+        default: "include",
     })
     .option("input", {
         alias: "i",
