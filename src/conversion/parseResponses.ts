@@ -67,7 +67,6 @@ const parseResponses = async (data: string, roster: CanvasStudent[], config: Can
     const output = parse(data, {
         bom: true,
     }) as string[][];
-    //console.log(output);
     const header = output[0];
     const idCol = header.lastIndexOf("id");
     const questionStartCol = Math.max(header.lastIndexOf("submitted"), header.lastIndexOf("attempt")) + 1;
