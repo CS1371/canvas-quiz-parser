@@ -18,7 +18,7 @@ const formatFITB = (qr: FITBQuizResponse): string => {
         return `<p>${b}<code>${response[i]}</code></p>`;
     });
     // UNSAFE: HTML INJECTION
-    return `<div class="question mfitb"><h2>${name}</h2><p class="question-id"><em>${id}</em></p>${prompt}<div class="fitb-answers">${qa.join("")}</div></div>`;
+    return `<div class="question mfitb"><h2>${name}</h2><p class="question-id"><em>${id}</em></p>${prompt}<div class="answer fitb-answers">${qa.join("")}</div></div>`;
 };
 
 export default formatFITB;
