@@ -111,7 +111,7 @@ export default async function parseQuiz(config: ParserConfig): Promise<void> {
         const overall = generateHtml(responses.slice(i, endInd));
         let pName: string;
         if (chunk !== 0) {
-            pName = `${i / 10}`.padStart(2, "0");
+            pName = `${i / chunkSize}`.padStart(2, "0");
         } else if (attemptStrategy === "all") {
             const attemptNum = `${responses[i].attempt}`.padStart(2, "0");
             pName = `${responses[i].login}_${attemptNum}`;
