@@ -93,7 +93,7 @@ export default async function parseQuiz(config: CanvasConfig, dataConfig: DataCo
     for (let i = 0; i < responses.length; i += chunkSize) {
         const endInd = i + chunkSize > responses.length ? responses.length : i + chunkSize;
         const overall = generateHtml(responses.slice(i, endInd));
-        const pName = chunk === 0 ? responses[i].login  : `${i / 10}`.padStart(2, "0");
+        const pName = chunk === 0 ? responses[i].login  : `${i / chunkSize}`.padStart(2, "0");
         if (browser !== undefined) {
             try {
                 await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
