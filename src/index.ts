@@ -4,7 +4,7 @@ import fs from "fs";
 import rimraf from "rimraf";
 import { getStudents, requestCSV } from "./canvas";
 import { parseResponses, generateHtml } from "./conversion";
-import { CanvasConfig } from "./types";
+import { CanvasConfig, Question, Student } from "./types";
 import yargs from "yargs";
 import printPDF from "./conversion/generatePDF";
 
@@ -16,6 +16,17 @@ interface ParserConfig {
     chunk: number;
     attemptStrategy: "first"|"last"|"all";
     includeNoSubs: boolean;
+};
+
+interface ParsedOutput {
+    questions: Question[];
+    students: Student[];
+    template: {
+        html: string;
+        pdfPath?: string;
+    };
+    html: string[];
+    pdfFilePaths?: string[];
 };
 
 /**
@@ -30,7 +41,7 @@ interface ParserConfig {
  * @param outConfig The output configuration to use
  * @returns A Promise that resolves when this function is completely done and disposal is complete.
  */
-export default async function parseQuiz(config: ParserConfig): Promise<void> {
+export default async function parseQuiz(config: ParserConfig): Promise<ParsedOutput> {
     /*
     const evil = String.raw`*\\,:;&$%^#@'<>?,\\\, \\\,\, \\,\, \\\,\\,ℂ◉℗⒴ ℘ⓐṨͲℰ Ⓒℌ◭ℝ◬ℂ⒯℮ℛ ,`;
     console.log(evil.replace(/\\,/gi, '_'));
@@ -63,6 +74,18 @@ export default async function parseQuiz(config: ParserConfig): Promise<void> {
         attemptStrategy,
         includeNoSubs,
     } = config;
+
+    const output: ParsedOutput = {
+        html: [],
+        questions: [],
+        students: [],
+        template: {
+            html: "",
+            pdfPath: undefined,
+        },
+        pdfFilePaths: outDir === undefined ? undefined : [],
+    };
+
     const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     
     const csvReporter = input === undefined ? requestCSV(canvas) : Promise.resolve(fs.readFileSync(input).toString());
@@ -72,9 +95,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<void> {
     // Parse their responses, providing the question library.
     // We're guaranteed that every question will be accounted for.
     // 2. We'll have to wait on csv Reporter, but then convert
-    const combined = await parseResponses(await csvReporter, await studentReporter, { canvas, attemptStrategy  });
-    const template = combined[0];
-    const responses = combined.slice(1).filter(stud => {
+    const { template, students, questions } = await parseResponses(await csvReporter, await studentReporter, { canvas, attemptStrategy  });
+    output.questions = questions;
+    const responses = students.filter(stud => {
         if (includeNoSubs) {
             return true;
         } else {
@@ -92,16 +115,17 @@ export default async function parseQuiz(config: ParserConfig): Promise<void> {
     let browser = await launcher;
     if (includeTemplate === "include" || includeTemplate === "only") {
         const templateHtml: string = generateHtml([template]);
+        output.template.html = templateHtml;
         if (browser !== undefined) {
             await printPDF(templateHtml, `${outDir}/template.pdf`, browser);
-        } else {
-            process.stdout.write(templateHtml);
+            output.template.pdfPath = "template.pdf";
         }
     }
     if (includeTemplate === "only") {
         await browser?.close();
-        return;
+        return output;
     }
+    output.students = responses;
     responses.sort((s1, s2) => {
         return s1.login.localeCompare(s2.login);
     });
@@ -118,6 +142,7 @@ export default async function parseQuiz(config: ParserConfig): Promise<void> {
         } else {
             pName = responses[i].login;
         }
+        output.html.push(overall);
         if (browser !== undefined) {
             try {
                 await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
@@ -127,106 +152,107 @@ export default async function parseQuiz(config: ParserConfig): Promise<void> {
                 browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
                 await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
             }
-        } else {
-            process.stdout.write(overall);
+            output.pdfFilePaths?.push(`${pName}.pdf`);
         }
     }
     if (browser !== undefined) {
         await browser.close();
     }
+    return output;
 }
 
-const args = yargs
-    .command("[OPTS]", "Parse a Canvas Quiz and Responses into a unified PDF")
-    .usage("Usage: $0 -s [SITE] -c [COURSE] -q [QUIZ] -t [TOKEN]")
-    .version("1.0.0")
-    .option("site", {
-        alias: "s",
-        describe: "The base site, such as instructure.university.com",
-        demandOption: true,
-        nargs: 1,
-        string: true,
-    })
-    .option("course", {
-        alias: "c",
-        describe: "The course ID that this quiz belongs to",
-        demandOption: true,
-        nargs: 1,
-        string: true,
-    })
-    .option("quiz", {
-        alias: "q",
-        describe: "The ID of the quiz you would ike parsed",
-        demandOption: true,
-        nargs: 1,
-        string: true,
-    })
-    .option("token", {
-        alias: "t",
-        describe: "Your Canvas API Token. Usually begins with 2096~",
-        demandOption: true,
-        nargs: 1,
-        string: true,
-    })
-    .option("output", {
-        alias: "o",
-        describe: "The output folder destination. If not given, the raw HTML is given in stdout",
-        demandOption: false,
-        nargs: 1,
-        string: true,
-    })
-    .option("template", {
-        describe: "Include the template. If 'include', then the template, along with all other documents, is printed. If 'only', only the template is provided. Any other value will not include the template.",
-        demandOption: false,
-        nargs: 1,
-        string: true,
-        default: "include",
-    })
-    .option("input", {
-        alias: "i",
-        describe: "The input CSV file; if none given, we will use the API",
-        demandOption: false,
-        nargs: 1,
-        string: true,
-        default: undefined,
-    })
-    .option("chunk", {
-        describe: "The chunk size to use for generating HTML and PDF. If 0, then each student gets their own PDF, which is named <login_id>.pdf",
-        demandOption: false,
-        nargs: 1,
-        number: true,
-        default: 10,
-    })
-    .option("attempt-strategy", {
-        describe: "The strategy to use to handle multiple attempts. Can be 'last', 'first', or 'all'. If 'all' is selected, and chunk size is 0, then the attempt number will be appended to the output file name.",
-        demandOption: false,
-        nargs: 1,
-        string: true,
-        default: "last",
-    })
-    .option("include-no-sub", {
-        describe: "Whether or not to include students without a submission.",
-        demandOption: false,
-        nargs: 1,
-        boolean: true,
-        default: true,
-    })
-    .help()
-    .argv;
+if (require.main === module) {
+    const args = yargs
+        .command("[OPTS]", "Parse a Canvas Quiz and Responses into a unified PDF")
+        .usage("Usage: $0 -s [SITE] -c [COURSE] -q [QUIZ] -t [TOKEN]")
+        .version("1.0.0")
+        .option("site", {
+            alias: "s",
+            describe: "The base site, such as instructure.university.com",
+            demandOption: true,
+            nargs: 1,
+            string: true,
+        })
+        .option("course", {
+            alias: "c",
+            describe: "The course ID that this quiz belongs to",
+            demandOption: true,
+            nargs: 1,
+            string: true,
+        })
+        .option("quiz", {
+            alias: "q",
+            describe: "The ID of the quiz you would ike parsed",
+            demandOption: true,
+            nargs: 1,
+            string: true,
+        })
+        .option("token", {
+            alias: "t",
+            describe: "Your Canvas API Token. Usually begins with 2096~",
+            demandOption: true,
+            nargs: 1,
+            string: true,
+        })
+        .option("output", {
+            alias: "o",
+            describe: "The output folder destination. If not given, no files are written",
+            demandOption: false,
+            nargs: 1,
+            string: true,
+        })
+        .option("template", {
+            describe: "Include the template. If 'include', then the template, along with all other documents, is printed. If 'only', only the template is provided. Any other value will not include the template.",
+            demandOption: false,
+            nargs: 1,
+            string: true,
+            default: "include",
+        })
+        .option("input", {
+            alias: "i",
+            describe: "The input CSV file; if none given, we will use the API",
+            demandOption: false,
+            nargs: 1,
+            string: true,
+            default: undefined,
+        })
+        .option("chunk", {
+            describe: "The chunk size to use for generating HTML and PDF. If 0, then each student gets their own PDF, which is named <login_id>.pdf",
+            demandOption: false,
+            nargs: 1,
+            number: true,
+            default: 10,
+        })
+        .option("attempt-strategy", {
+            describe: "The strategy to use to handle multiple attempts. Can be 'last', 'first', or 'all'. If 'all' is selected, and chunk size is 0, then the attempt number will be appended to the output file name.",
+            demandOption: false,
+            nargs: 1,
+            string: true,
+            default: "last",
+        })
+        .option("include-no-sub", {
+            describe: "Whether or not to include students without a submission.",
+            demandOption: false,
+            nargs: 1,
+            boolean: true,
+            default: true,
+        })
+        .help()
+        .argv;
 
-const config: ParserConfig = {
-    canvas: {
-        course: args.course,
-        site: args.site,
-        quiz: args.quiz,
-        token: args.token,
-    },
-    outDir: args.output,
-    input: args.input,
-    template: args.template,
-    chunk: args.chunk,
-    attemptStrategy: args["attempt-strategy"] as "first"|"last"|"all",
-    includeNoSubs: args["include-no-sub"],
-};
-
-parseQuiz(config);
+    const config: ParserConfig = {
+        canvas: {
+            course: args.course,
+            site: args.site,
+            quiz: args.quiz,
+            token: args.token,
+        },
+        outDir: args.output,
+        input: args.input,
+        template: args.template,
+        chunk: args.chunk,
+        attemptStrategy: args["attempt-strategy"] as "first"|"last"|"all",
+        includeNoSubs: args["include-no-sub"],
+    };
+    parseQuiz(config);
+}
