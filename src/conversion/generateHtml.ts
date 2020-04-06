@@ -28,13 +28,13 @@ const generateHtml = (students: Student[]): string => {
     return `<!DOCTYPE html><html><head><meta charset="utf8">
     <link href="https://fonts.googleapis.com/css?family=Liu+Jian+Mao+Cao&display=swap" rel="stylesheet"> 
     <style>
-    .fitb-answers p { max-height: 0.65in; min-height: 0.65in; height: 0.65in; overflow: hidden; } 
+    .fitb-answers p { max-height: 0.75in; min-height: 0.75in; height: 0.75in; overflow: hidden; } 
     .cover-page { text-align: left; break-after: page; font-family: '${fontFamily}'; } 
     .cover-page h1, .cover-page p { margin-top: 50px; margin-bottom: 50px; } 
     .cover-page h1 { font-size: 200%; } 
     .cover-page p { font-size: 150%; } 
     .question, .question img { break-after: page; } 
-    .question .answer { break-before: page; }
+    .question .answer { break-before: page; margin: 20px; border: 1px solid black; border-radius: 5px; }
     .question h2 { margin-bottom: 0; padding-bottom: 0; } 
     .question.essay .answer { min-height: 20in; max-height: 20in; overflow: hidden; } 
     .question-id { font-size: 75%; color: darkgrey; margin: 0; padding: 0; } 
