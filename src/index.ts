@@ -16,6 +16,8 @@ interface ParserConfig {
     chunk: number;
     attemptStrategy: "first"|"last"|"all";
     includeNoSubs: boolean;
+    students?: string[];
+    verbose: boolean;
 };
 
 interface ParsedOutput {
@@ -73,7 +75,20 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         chunk,
         attemptStrategy,
         includeNoSubs,
+        students: studFilter,
+        verbose,
     } = config;
+
+    // for each studFilter that has @ prepended, read from that file
+    const studentLogins: string[] = studFilter === undefined ? [] : studFilter.flatMap(login => {
+        if (login.startsWith("@")) {
+            // read the file
+            const logins = fs.readFileSync(login.slice(1)).toString();
+            return logins.split(/\n/gi);
+        } else {
+            return [login];
+        }
+    });
 
     const output: ParsedOutput = {
         html: [],
@@ -85,17 +100,27 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         },
         pdfFilePaths: outDir === undefined ? undefined : [],
     };
-
+    if (verbose && outDir !== undefined) {
+        console.log("Starting up Puppeteer");
+    }
     const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
-    
+    if (verbose) {
+        console.log("Fetching student responses");
+    }
     const csvReporter = input === undefined ? requestCSV(canvas) : Promise.resolve(fs.readFileSync(input).toString());
-    const studentReporter = getStudents(canvas);
+    if (verbose) {
+        console.log("Fetching and Filtering students from canvas");
+    }
+    const canvasStudents = (await getStudents(canvas)).filter(cs => studentLogins.includes(cs.login_id));
 
     // now that we have questions and students, matchmake!
     // Parse their responses, providing the question library.
     // We're guaranteed that every question will be accounted for.
     // 2. We'll have to wait on csv Reporter, but then convert
-    const { template, students, questions } = await parseResponses(await csvReporter, await studentReporter, { canvas, attemptStrategy  });
+    if (verbose) {
+        console.log("Parsing Responses and Fetching Questions");
+    }
+    const { template, students, questions } = await parseResponses(await csvReporter, canvasStudents, { canvas, attemptStrategy  });
     output.questions = questions;
     const responses = students.filter(stud => {
         if (includeNoSubs) {
@@ -106,6 +131,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
     });
     // stream every chunk students
     if (outDir !== undefined) {
+        if (verbose) {
+            console.log("Setting up output environment");
+        }
         if (fs.existsSync(outDir)) {
             rimraf.sync(outDir);
         }
@@ -114,6 +142,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
     // create template:
     let browser = await launcher;
     if (includeTemplate === "include" || includeTemplate === "only") {
+        if (verbose) {
+            console.log("Generating Template");
+        }
         const templateHtml: string = generateHtml([template]);
         output.template.html = templateHtml;
         if (browser !== undefined) {
@@ -122,6 +153,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         }
     }
     if (includeTemplate === "only") {
+        if (verbose) {
+            console.log("Cleaning up");
+        }
         await browser?.close();
         return output;
     }
@@ -130,7 +164,13 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         return s1.login.localeCompare(s2.login);
     });
     const chunkSize = chunk === 0 ? 1 : chunk;
+    if (verbose) {
+        console.log(`Generating student batches: ${chunkSize} per batch`);
+    }
     for (let i = 0; i < responses.length; i += chunkSize) {
+        if (verbose) {
+            console.log(`Generating batch #${(i / chunkSize) + 1}/${Math.ceil(responses.length / chunkSize)}`);
+        }
         const endInd = i + chunkSize > responses.length ? responses.length : i + chunkSize;
         const overall = generateHtml(responses.slice(i, endInd));
         let pName: string;
@@ -145,6 +185,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         output.html.push(overall);
         if (browser !== undefined) {
             try {
+                if (verbose) {
+                    console.log(`Generating PDF for batch #${(i / chunkSize) + 1}`);
+                }
                 await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
             } catch {
                 // browser failed, but we need to formally close it. remake the browser and attempt again...
@@ -156,6 +199,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         }
     }
     if (browser !== undefined) {
+        if (verbose) {
+            console.log("Cleaning Up");
+        }
         await browser.close();
     }
     return output;
@@ -164,8 +210,8 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
 if (require.main === module) {
     const args = yargs
         .command("[OPTS]", "Parse a Canvas Quiz and Responses into a unified PDF")
-        .usage("Usage: $0 -s [SITE] -c [COURSE] -q [QUIZ] -t [TOKEN]")
-        .version("1.0.0")
+        .usage("Usage: $0 -s [SITE] -c [COURSE] -q [QUIZ] -t [TOKEN] [OPTS]")
+        .version("2.0.0")
         .option("site", {
             alias: "s",
             describe: "The base site, such as instructure.university.com",
@@ -237,9 +283,21 @@ if (require.main === module) {
             boolean: true,
             default: true,
         })
+        .option("students", {
+            describe: "Student logins to use as a filter. If given multiple times, then multiple students will be filtered. If you have a long list, you can instead give a single filename, prepended with '@', such as '@students.txt'. The file should be newline-separated, with each student login on a newline.",
+            demandOption: false,
+            array: true,
+            string: true,
+        })
+        .option("verbose", {
+            alias: "v",
+            describe: "Be more verbose in output",
+            demandOption: false,
+            default: false,
+            boolean: true,
+        })
         .help()
         .argv;
-
     const config: ParserConfig = {
         canvas: {
             course: args.course,
@@ -253,6 +311,8 @@ if (require.main === module) {
         chunk: args.chunk,
         attemptStrategy: args["attempt-strategy"] as "first"|"last"|"all",
         includeNoSubs: args["include-no-sub"],
+        students: args.students,
+        verbose: args.verbose,
     };
     parseQuiz(config);
 }

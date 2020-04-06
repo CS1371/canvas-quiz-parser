@@ -34,7 +34,7 @@ const generateHtml = (students: Student[]): string => {
     .cover-page h1 { font-size: 200%; } 
     .cover-page p { font-size: 150%; } 
     .question, .question img { break-after: page; } 
-    .question .answer { break-before: page; margin: 20px; border: 1px solid black; border-radius: 5px; }
+    .question .answer { break-before: page; margin: 20px; }
     .question h2 { margin-bottom: 0; padding-bottom: 0; } 
     .question.essay .answer { min-height: 20in; max-height: 20in; overflow: hidden; } 
     .question-id { font-size: 75%; color: darkgrey; margin: 0; padding: 0; } 
