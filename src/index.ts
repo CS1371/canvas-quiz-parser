@@ -8,7 +8,7 @@ import { CanvasConfig, Question, Student } from "./types";
 import yargs from "yargs";
 import printPDF from "./conversion/generatePDF";
 
-interface ParserConfig {
+export interface ParserConfig {
     canvas: CanvasConfig;
     input?: string;
     outDir?: string;
@@ -20,7 +20,7 @@ interface ParserConfig {
     verbose: boolean;
 };
 
-interface ParsedOutput {
+export interface ParsedOutput {
     questions: Question[];
     students: Student[];
     template: {
@@ -88,7 +88,8 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         } else {
             return [login];
         }
-    });
+    })
+        .filter((v, i, a) => a.indexOf(v) === i);
 
     const output: ParsedOutput = {
         html: [],
@@ -112,7 +113,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         console.log("Fetching and Filtering students from canvas");
     }
     const canvasStudents = (await getStudents(canvas)).filter(cs => studentLogins.includes(cs.login_id));
-
+    if (verbose && canvasStudents.length !== studentLogins.length) {
+        console.warn(`Warning: Number of students to be processed (${canvasStudents.length}) is not the same as the filter (${studentLogins.length})`);
+    }
     // now that we have questions and students, matchmake!
     // Parse their responses, providing the question library.
     // We're guaranteed that every question will be accounted for.
@@ -121,6 +124,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         console.log("Parsing Responses and Fetching Questions");
     }
     const { template, students, questions } = await parseResponses(await csvReporter, canvasStudents, { canvas, attemptStrategy  });
+    if (verbose && students.length !== studentLogins.length) {
+        console.warn(`Warning: Number of students processed (${students.length}) is not the same as the filter (${studentLogins.length})`);
+    }
     output.questions = questions;
     const responses = students.filter(stud => {
         if (includeNoSubs) {
