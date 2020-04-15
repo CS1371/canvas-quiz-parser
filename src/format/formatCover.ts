@@ -6,7 +6,7 @@ import { Student } from "../types";
  * @returns HTML to be used for the cover page
  */
 const formatCover = (student: Student): string => {
-    return `<div class="cover-page"><h1>${student.login}</h1><p>${student.sisid}</p><p>${student.name}</p></div>`;
+    return `<div class="cover-page"><h1>${student.login}</h1><p class="cover-subtitle"><em>Login</em></p><p>${student.sisid}</p><p class="cover-subtitle"><em>ID</em></p><p>${student.name}</p><p class="cover-subtitle"><em>Name</em></p></div>`;
 };
 
 export default formatCover;

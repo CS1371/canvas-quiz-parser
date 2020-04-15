@@ -18,6 +18,7 @@ export interface ParserConfig {
     includeNoSubs: boolean;
     students?: string[];
     verbose: boolean;
+    format: ("HTML"|"PDF")[];
 };
 
 export interface ParsedOutput {
@@ -77,6 +78,7 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         includeNoSubs,
         students: studFilter,
         verbose,
+        format,
     } = config;
 
     // for each studFilter that has @ prepended, read from that file
@@ -104,7 +106,7 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
     if (verbose && outDir !== undefined) {
         console.log("Starting up Puppeteer");
     }
-    const launcher = outDir === undefined ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+    const launcher = (outDir === undefined || !format.includes("PDF")) ? undefined : puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     if (verbose) {
         console.log("Fetching student responses");
     }
@@ -157,6 +159,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
             await printPDF(templateHtml, `${outDir}/template.pdf`, browser);
             output.template.pdfPath = "template.pdf";
         }
+        if (format.includes("HTML") && outDir !== undefined) {
+            fs.writeFileSync(`${outDir}/template.html`, templateHtml);
+        }
     }
     if (includeTemplate === "only") {
         if (verbose) {
@@ -202,6 +207,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
                 await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
             }
             output.pdfFilePaths?.push(`${pName}.pdf`);
+        }
+        if (format.includes("HTML") && outDir !== undefined) {
+            fs.writeFileSync(`${outDir}/${pName}.html`, overall);
         }
     }
     if (browser !== undefined) {
@@ -252,6 +260,15 @@ if (require.main === module) {
             demandOption: false,
             nargs: 1,
             string: true,
+        })
+        .option("format", {
+            alias: "f",
+            describe: "The format you'd like output to be. Can be either PDF or HTML",
+            demandOption: false,
+            nargs: 1,
+            string: true,
+            array: true,
+            default: ["PDF"],
         })
         .option("template", {
             describe: "Include the template. If 'include', then the template, along with all other documents, is printed. If 'only', only the template is provided. Any other value will not include the template.",
@@ -312,6 +329,7 @@ if (require.main === module) {
             token: args.token,
         },
         outDir: args.output,
+        format: args.format as ("HTML"|"PDF")[],
         input: args.input,
         template: args.template,
         chunk: args.chunk,

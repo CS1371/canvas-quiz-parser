@@ -30,9 +30,10 @@ const generateHtml = (students: Student[]): string => {
     <style>
     .fitb-answers p { max-height: 0.75in; min-height: 0.75in; height: 0.75in; overflow: hidden; } 
     .cover-page { text-align: left; break-after: page; font-family: '${fontFamily}'; } 
-    .cover-page h1, .cover-page p { margin-top: 50px; margin-bottom: 50px; } 
+    .cover-page h1, .cover-page p { margin-top: 50px; margin-bottom: 0; } 
     .cover-page h1 { font-size: 200%; } 
     .cover-page p { font-size: 150%; } 
+    .cover-page p.cover-subtitle { font-size: 75%; margin: 0; padding: 0; }
     .question, .question img { break-after: page; } 
     .question .answer { break-before: page; margin: 20px; }
     .question h2 { margin-bottom: 0; padding-bottom: 0; } 
