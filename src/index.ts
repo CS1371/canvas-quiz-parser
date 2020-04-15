@@ -220,7 +220,7 @@ if (require.main === module) {
         .version("2.0.0")
         .option("site", {
             alias: "s",
-            describe: "The base site, such as instructure.university.com",
+            describe: "The base site, such as university.instructure.com",
             demandOption: true,
             nargs: 1,
             string: true,
