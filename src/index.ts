@@ -178,6 +178,8 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
     if (verbose) {
         console.log(`Generating student batches: ${chunkSize} per batch`);
     }
+
+    const padSize = (Math.ceil(responses.length / chunkSize)).toString().length;
     for (let i = 0; i < responses.length; i += chunkSize) {
         if (verbose) {
             console.log(`Generating batch #${(i / chunkSize) + 1}/${Math.ceil(responses.length / chunkSize)}`);
@@ -186,9 +188,9 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         const overall = generateHtml(responses.slice(i, endInd));
         let pName: string;
         if (chunk !== 0) {
-            pName = `${i / chunkSize}`.padStart(2, "0");
+            pName = `${i / chunkSize}`.padStart(padSize, "0");
         } else if (attemptStrategy === "all") {
-            const attemptNum = `${responses[i].attempt}`.padStart(2, "0");
+            const attemptNum = `${responses[i].attempt}`.padStart(padSize, "0");
             pName = `${responses[i].login}_${attemptNum}`;
         } else {
             pName = responses[i].login;
