@@ -126,7 +126,7 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         console.log("Parsing Responses and Fetching Questions");
     }
     const { template, students, questions } = await parseResponses(await csvReporter, canvasStudents, { canvas, attemptStrategy  });
-    if (verbose && students.length !== studentLogins.length) {
+    if (verbose && studentLogins.length !== 0 && students.length !== studentLogins.length) {
         console.warn(`Warning: Number of students processed (${students.length}) is not the same as the filter (${studentLogins.length})`);
     }
     output.questions = questions;
