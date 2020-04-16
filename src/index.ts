@@ -114,8 +114,8 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
     if (verbose) {
         console.log("Fetching and Filtering students from canvas");
     }
-    const canvasStudents = (await getStudents(canvas)).filter(cs => studentLogins.includes(cs.login_id));
-    if (verbose && canvasStudents.length !== studentLogins.length) {
+    const canvasStudents = (await getStudents(canvas)).filter(cs => studentLogins.length === 0 || studentLogins.includes(cs.login_id));
+    if (verbose && studentLogins.length !== 0 && canvasStudents.length !== studentLogins.length) {
         console.warn(`Warning: Number of students to be processed (${canvasStudents.length}) is not the same as the filter (${studentLogins.length})`);
     }
     // now that we have questions and students, matchmake!
