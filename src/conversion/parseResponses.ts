@@ -126,10 +126,10 @@ const parseResponses = async (data: string, roster: CanvasStudent[], config: Par
     });
     const template: Student = {
         id: "-1",
-        login: "_______________",
-        email: "null",
-        name: "_______________",
-        sisid: "_______________",
+        login: "&nbsp;",
+        email: "&nbsp;",
+        name: "&nbsp;",
+        sisid: "&nbsp;",
         attempt: 0,
         responses: questions.map(quest => dispatchResponse("", quest)),
     };

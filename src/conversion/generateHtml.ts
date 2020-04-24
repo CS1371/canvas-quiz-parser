@@ -8,10 +8,7 @@ import { QuestionType, Student } from "../types";
 
 const generateHtml = (students: Student[]): string => {
     // We can't use this for general, because there is no underline
-    let fontFamily = "Liu Jian Mao Cao";
-    if (students.length === 1 && students[0].id === "-1") {
-        fontFamily = "Courier New";
-    }
+    const fontFamily = "Liu Jian Mao Cao";
     const html: string[] = students.map(resp => {
         return [formatCover(resp), ...resp.responses.map(qr => {
             if (qr.type === QuestionType.ESSAY) {
