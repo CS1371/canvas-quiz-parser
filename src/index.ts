@@ -306,7 +306,7 @@ if (require.main === module) {
             demandOption: false,
             nargs: 1,
             boolean: true,
-            default: true,
+            default: false,
         })
         .option("students", {
             describe: "Student logins to use as a filter. If given multiple times, then multiple students will be filtered. If you have a long list, you can instead give a single filename, prepended with '@', such as '@students.txt'. The file should be newline-separated, with each student login on a newline.",
