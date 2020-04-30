@@ -18,6 +18,7 @@ export interface ParserConfig {
     includeNoSubs: boolean;
     students?: string[];
     verbose: boolean;
+    strict: boolean;
     format: ("HTML"|"PDF")[];
 };
 
@@ -78,6 +79,7 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         includeNoSubs,
         students: studFilter,
         verbose,
+        strict,
         format,
     } = config;
 
@@ -91,7 +93,8 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
             return [login];
         }
     })
-        .filter((v, i, a) => a.indexOf(v) === i);
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .sort();
 
     const output: ParsedOutput = {
         html: [],
@@ -114,9 +117,22 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
     if (verbose) {
         console.log("Fetching and Filtering students from canvas");
     }
-    const canvasStudents = (await getStudents(canvas)).filter(cs => studentLogins.length === 0 || studentLogins.includes(cs.login_id));
-    if (verbose && studentLogins.length !== 0 && canvasStudents.length !== studentLogins.length) {
-        console.warn(`Warning: Number of students to be processed (${canvasStudents.length}) is not the same as the filter (${studentLogins.length})`);
+    const canvasStudents = (await getStudents(canvas))
+        .filter(cs => studentLogins.length === 0 || studentLogins.includes(cs.login_id))
+        .sort((a, b) => a.login_id.localeCompare(b.login_id));
+    if ((verbose || strict) && studentLogins.length !== 0 && canvasStudents.length !== studentLogins.length) {
+        const err = `Warning: Number of students to be processed (${canvasStudents.length}) is not the same as the filter (${studentLogins.length})`;
+        if (verbose) {
+            console.warn(err);
+            console.warn("The following students were specified in the filter, but will not be processed:");
+            console.warn(studentLogins.filter(s => !canvasStudents.map(cs => cs.login_id).includes(s)).join("\n\t"));
+        }
+        if (strict) {
+            if (launcher !== undefined) {
+                await (await launcher).close();
+            }
+            throw new Error(err);
+        }
     }
     // now that we have questions and students, matchmake!
     // Parse their responses, providing the question library.
@@ -126,8 +142,19 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         console.log("Parsing Responses and Fetching Questions");
     }
     const { template, students, questions } = await parseResponses(await csvReporter, canvasStudents, { canvas, attemptStrategy  });
-    if (verbose && studentLogins.length !== 0 && students.length !== studentLogins.length) {
-        console.warn(`Warning: Number of students processed (${students.length}) is not the same as the filter (${studentLogins.length})`);
+    if ((verbose || strict) && studentLogins.length !== 0 && students.length !== studentLogins.length) {
+        const err = `Warning: Number of students to be processed (${canvasStudents.length}) is not the same as the filter (${studentLogins.length})`;
+        if (verbose) {
+            console.warn(err);
+            console.warn("The following students were specified in the filter, but will not be processed:");
+            console.warn(studentLogins.filter(s => !canvasStudents.map(cs => cs.login_id).includes(s)).join("\n\t"));
+        }
+        if (strict) {
+            if (launcher !== undefined) {
+                await (await launcher).close();
+            }
+            throw new Error(err);
+        }
     }
     output.questions = questions;
     const responses = students.filter(stud => {
@@ -321,6 +348,12 @@ if (require.main === module) {
             default: false,
             boolean: true,
         })
+        .option("strict", {
+            describe: "Instead of warning, throw an error when a warning condition is met. This happens regardless of the verbosity level",
+            demandOption: false,
+            default: false,
+            boolean: true,
+        })
         .help()
         .argv;
     const config: ParserConfig = {
@@ -339,6 +372,10 @@ if (require.main === module) {
         includeNoSubs: args["include-no-sub"],
         students: args.students,
         verbose: args.verbose,
+        strict: args.strict,
     };
-    parseQuiz(config);
+    parseQuiz(config)
+        .catch(r => {
+            console.error(r);
+        });
 }
