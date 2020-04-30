@@ -3,7 +3,7 @@ import puppeteer from "puppeteer";
 import fs from "fs";
 import rimraf from "rimraf";
 import { getStudents, requestCSV } from "./canvas";
-import { parseResponses, generateHtml } from "./conversion";
+import { parseResponses, generateHtml, ParserOutput, ParseError } from "./conversion";
 import { CanvasConfig, Question, Student } from "./types";
 import yargs from "yargs";
 import printPDF from "./conversion/generatePDF";
@@ -141,7 +141,20 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
     if (verbose) {
         console.log("Parsing Responses and Fetching Questions");
     }
-    const { template, students, questions } = await parseResponses(await csvReporter, canvasStudents, { canvas, attemptStrategy  });
+    let res = await parseResponses(await csvReporter, canvasStudents, { canvas, attemptStrategy }, strict);
+    if (!strict) {
+        res = res as ParserOutput;
+    } else if (Array.isArray(res)) {
+        res = res as ParseError[];
+        console.error(res);
+        if (launcher !== undefined) {
+            await (await launcher).close();
+        }
+        throw new Error("Parsing Error; check the log");
+    } else {
+        res = res as ParserOutput;
+    }
+    const { template, students, questions } = res;
     if ((verbose || strict) && studentLogins.length !== 0 && students.length !== studentLogins.length) {
         const err = `Warning: Number of students to be processed (${canvasStudents.length}) is not the same as the filter (${studentLogins.length})`;
         if (verbose) {
