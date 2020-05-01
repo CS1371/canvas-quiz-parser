@@ -67,3 +67,4 @@ tmp*.json
 *.pdf
 out/*
 .DS_Store
+students
