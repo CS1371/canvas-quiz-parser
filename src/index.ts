@@ -3,10 +3,9 @@ import puppeteer from "puppeteer";
 import fs from "fs";
 import rimraf from "rimraf";
 import { getStudents, requestCSV } from "./canvas";
-import { parseResponses, generateHtml, ParserOutput, ParseError } from "./conversion";
+import { parseResponses, generateHtml, ParserOutput, ParseError, generatePDF } from "./conversion";
 import { CanvasConfig, Question, Student } from "./types";
 import yargs from "yargs";
-import printPDF from "./conversion/generatePDF";
 
 export interface ParserConfig {
     canvas: CanvasConfig;
@@ -19,7 +18,7 @@ export interface ParserConfig {
     students?: string[];
     verbose: boolean;
     strict: boolean;
-    format: ("HTML"|"PDF")[];
+    format: ("HTML"|"PDF"|"TXT")[];
 };
 
 export interface ParsedOutput {
@@ -187,6 +186,31 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         }
         fs.mkdirSync(outDir);
     }
+    if (format.includes("TXT")) {
+        students
+            .map(stud => {
+                // filter out to only have questions that have a response
+                const out: Student = { ...stud };
+                out.responses = out.responses
+                    .filter(qr => qr.response !== undefined)
+                    .filter(qr => qr.response !== null);
+                return out;
+            })
+            .forEach(stud => {
+                // create a folder for them.
+                fs.mkdirSync(`${outDir}/${stud.login}`);
+                // make their files in there
+                stud.responses.forEach(resp => {
+                    // get the last three characters
+                    const qName = `question${resp.question.name.substring(resp.question.name.length - 3, resp.question.name.length - 2)}.txt`;
+                    if (Array.isArray(resp.response)) {
+                        fs.writeFileSync(`${outDir}/${stud.login}/${qName}`, resp.response.join("\n"));
+                    } else {
+                        fs.writeFileSync(`${outDir}/${stud.login}/${qName}`, resp.response);
+                    }
+                });
+            });
+    }
     // create template:
     let browser = await launcher;
     if (includeTemplate === "include" || includeTemplate === "only") {
@@ -196,7 +220,7 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
         const templateHtml: string = generateHtml([template]);
         output.template.html = templateHtml;
         if (browser !== undefined) {
-            await printPDF(templateHtml, `${outDir}/template.pdf`, browser);
+            await generatePDF(templateHtml, `${outDir}/template.pdf`, browser);
             output.template.pdfPath = "template.pdf";
         }
         if (format.includes("HTML") && outDir !== undefined) {
@@ -241,12 +265,12 @@ export default async function parseQuiz(config: ParserConfig): Promise<ParsedOut
                 if (verbose) {
                     console.log(`Generating PDF for batch #${(i / chunkSize) + 1}`);
                 }
-                await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
+                await generatePDF(overall, `${outDir}/${pName}.pdf`, browser);
             } catch {
                 // browser failed, but we need to formally close it. remake the browser and attempt again...
                 await browser.close();
                 browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
-                await printPDF(overall, `${outDir}/${pName}.pdf`, browser);
+                await generatePDF(overall, `${outDir}/${pName}.pdf`, browser);
             }
             output.pdfFilePaths?.push(`${pName}.pdf`);
         }
@@ -305,7 +329,7 @@ if (require.main === module) {
         })
         .option("format", {
             alias: "f",
-            describe: "The format you'd like output to be. Can be either PDF or HTML",
+            describe: "The format you'd like output to be. Can be PDF, HTML, or TXT. PDF and HTML will generate stylized exams; TXT will instead create a folder for that student, regardless of the chunk size. Only submitted answers will be included",
             demandOption: false,
             nargs: 1,
             string: true,
@@ -377,7 +401,7 @@ if (require.main === module) {
             token: args.token,
         },
         outDir: args.output,
-        format: args.format as ("HTML"|"PDF")[],
+        format: args.format.map(str => str.toLocaleUpperCase()) as ("HTML"|"PDF"|"TXT")[],
         input: args.input,
         template: args.template,
         chunk: args.chunk,
