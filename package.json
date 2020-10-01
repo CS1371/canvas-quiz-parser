@@ -1,6 +1,6 @@
 {
   "name": "canvas-quiz-parser",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Parse Canvas Quizzes and their responses into HTML or PDF",
   "main": "index.js",
   "scripts": {
@@ -12,19 +12,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CS1371/canvas-quiz-parser.git"
+    "url": "git+https://github.com/alexhrao/canvas-quiz-parser.git"
   },
   "keywords": [
     "csv",
     "json",
-    "canvas"
+    "canvas",
+    "lms"
   ],
   "author": "Alexander Rao <alexhrao@gmail.com> (https://alexhrao.github.io)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CS1371/canvas-quiz-parser/issues"
+    "url": "https://github.com/alexhrao/canvas-quiz-parser/issues"
   },
-  "homepage": "https://github.com/CS1371/canvas-quiz-parser#readme",
+  "homepage": "https://github.com/alexhrao/canvas-quiz-parser#readme",
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
@@ -42,7 +43,7 @@
   },
   "dependencies": {
     "csv-parse": "^4.9.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "puppeteer": "^2.1.1",
     "rimraf": "^3.0.2",
     "yargs": "^15.3.1"
