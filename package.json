@@ -1,6 +1,6 @@
 {
   "name": "canvas-quiz-parser",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Parse Canvas Quizzes and their responses into HTML or PDF",
   "main": "index.js",
   "scripts": {
